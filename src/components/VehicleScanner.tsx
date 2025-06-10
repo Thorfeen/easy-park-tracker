@@ -1,10 +1,10 @@
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Camera, ScanLine } from "lucide-react";
+import { ArrowLeft, Camera, ScanLine, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface VehicleScannerProps {
@@ -16,23 +16,76 @@ interface VehicleScannerProps {
 
 const VehicleScanner = ({ onScanResult, onBack, title, description }: VehicleScannerProps) => {
   const [isScanning, setIsScanning] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   const [manualEntry, setManualEntry] = useState("");
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
-  const handleFileCapture = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string;
-        setCapturedImage(imageData);
-        processImage(imageData);
-      };
-      reader.readAsDataURL(file);
+  const stopCamera = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
     }
-  }, []);
+    setIsCameraActive(false);
+  }, [stream]);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: 'environment', // Use back camera on mobile
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      });
+      
+      setStream(mediaStream);
+      setIsCameraActive(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please check permissions or use manual entry.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context) return;
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw the video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert to base64 image
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    
+    // Stop camera and process the captured image
+    stopCamera();
+    processImage(imageData);
+  };
 
   const processImage = async (imageData: string) => {
     setIsScanning(true);
@@ -55,12 +108,6 @@ const VehicleScanner = ({ onScanResult, onBack, title, description }: VehicleSca
       
       onScanResult(detectedPlate);
     }, 2000);
-  };
-
-  const startCamera = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
   };
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -111,6 +158,42 @@ const VehicleScanner = ({ onScanResult, onBack, title, description }: VehicleSca
                   <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
                 </div>
               </div>
+            ) : isCameraActive ? (
+              <div className="space-y-4">
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-64 object-cover rounded-lg border-2 border-blue-300"
+                  />
+                  <div className="absolute inset-0 border-2 border-dashed border-white/50 rounded-lg m-4 flex items-center justify-center">
+                    <div className="text-white text-center bg-black/50 p-2 rounded">
+                      <p className="text-sm">Position license plate within frame</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={stopCamera}
+                    variant="secondary"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex gap-4">
+                  <Button
+                    onClick={capturePhoto}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 text-lg font-semibold"
+                  >
+                    <Camera className="h-6 w-6 mr-2" />
+                    Capture & Scan
+                  </Button>
+                </div>
+                
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
             ) : (
               <div className="space-y-6">
                 <div className="text-center">
@@ -119,23 +202,12 @@ const VehicleScanner = ({ onScanResult, onBack, title, description }: VehicleSca
                     className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-6 text-lg font-semibold"
                   >
                     <Camera className="h-6 w-6 mr-2" />
-                    Scan License Plate
+                    Open Camera Scanner
                   </Button>
                   <p className="text-sm text-gray-500 mt-2">
-                    Tap to capture a photo of the license plate
+                    Open camera to scan license plate
                   </p>
                 </div>
-
-                {capturedImage && (
-                  <div className="mt-4">
-                    <Label className="text-sm font-medium">Captured Image:</Label>
-                    <img 
-                      src={capturedImage} 
-                      alt="Captured license plate" 
-                      className="w-full max-h-48 object-contain border rounded-lg mt-2"
-                    />
-                  </div>
-                )}
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -169,15 +241,6 @@ const VehicleScanner = ({ onScanResult, onBack, title, description }: VehicleSca
                     Submit Manual Entry
                   </Button>
                 </form>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleFileCapture}
-                  className="hidden"
-                />
               </div>
             )}
           </CardContent>
