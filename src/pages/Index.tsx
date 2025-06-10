@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import VehicleEntry from "@/components/VehicleEntry";
 import VehicleExit from "@/components/VehicleExit";
 import ParkingRecords from "@/components/ParkingRecords";
-import { Car, Clock, History, DollarSign } from "lucide-react";
+import { Car, Clock, History, DollarSign, ScanLine } from "lucide-react";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 
 export interface ParkingRecord {
   id: string;
@@ -21,6 +21,7 @@ export interface ParkingRecord {
 const Index = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records'>('dashboard');
   const [parkingRecords, setParkingRecords] = useState<ParkingRecord[]>([]);
+  const isMobile = useMobileDetection();
 
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
   const completedRecords = parkingRecords.filter(record => record.status === 'completed');
@@ -129,7 +130,7 @@ const Index = () => {
                 <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('entry')}>
                   <CardHeader className="text-center">
-                    <Car className="h-12 w-12 mx-auto mb-4" />
+                    {isMobile ? <ScanLine className="h-12 w-12 mx-auto mb-4" /> : <Car className="h-12 w-12 mx-auto mb-4" />}
                     <CardTitle className="text-xl">Vehicle Entry</CardTitle>
                     <CardDescription className="text-blue-100">
                       Register new vehicle arrival
@@ -137,7 +138,7 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="text-center">
                     <Button variant="secondary" className="w-full">
-                      Add New Entry
+                      {isMobile ? "Scan New Entry" : "Add New Entry"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -145,7 +146,7 @@ const Index = () => {
                 <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('exit')}>
                   <CardHeader className="text-center">
-                    <Clock className="h-12 w-12 mx-auto mb-4" />
+                    {isMobile ? <ScanLine className="h-12 w-12 mx-auto mb-4" /> : <Clock className="h-12 w-12 mx-auto mb-4" />}
                     <CardTitle className="text-xl">Vehicle Exit</CardTitle>
                     <CardDescription className="text-green-100">
                       Process vehicle departure
@@ -153,7 +154,7 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="text-center">
                     <Button variant="secondary" className="w-full">
-                      Process Exit
+                      {isMobile ? "Scan Process Exit" : "Process Exit"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -216,3 +217,5 @@ const Index = () => {
 };
 
 export default Index;
+
+}
