@@ -24,8 +24,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     vehicleNumber: '',
-    passType: 'basic' as 'basic' | 'standard' | 'premium',
-    vehicleType: 'two-wheeler' as 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    passType: 'cycle' as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    vehicleType: 'cycle' as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
     ownerName: '',
     ownerPhone: '',
     duration: '1' // months
@@ -37,9 +37,38 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
   const { parkingRecords } = useParkingRecords(userId);
 
   const passTypes = [
-    { value: 'basic', label: 'Basic Pass', price: 500, description: 'For Two Wheelers', vehicleType: 'two-wheeler' },
-    { value: 'standard', label: 'Standard Pass', price: 800, description: 'For Three Wheelers', vehicleType: 'three-wheeler' },
-    { value: 'premium', label: 'Premium Pass', price: 1200, description: 'For Four Wheelers', vehicleType: 'four-wheeler' }
+    {
+      value: 'cycle',
+      label: 'Cycle Pass',
+      price: 300,
+      description: 'For cycle owners',
+      vehicleType: 'cycle',
+      display: "Cycle Pass"
+    },
+    {
+      value: 'two-wheeler',
+      label: 'Two-Wheeler Pass / Motorcycle Pass',
+      price: 600,
+      description: 'For motorcycles and scooters',
+      vehicleType: 'two-wheeler',
+      display: "Two-Wheeler/Motorcycle Pass"
+    },
+    {
+      value: 'three-wheeler',
+      label: 'Three-Wheeler Pass / Auto Rickshaw Pass',
+      price: 1200,
+      description: 'For auto rickshaws',
+      vehicleType: 'three-wheeler',
+      display: "Three-Wheeler/Auto Rickshaw Pass"
+    },
+    {
+      value: 'four-wheeler',
+      label: 'Four-Wheeler Pass / Car Pass',
+      price: 1500,
+      description: 'For cars',
+      vehicleType: 'four-wheeler',
+      display: "Four-Wheeler/Car Pass"
+    }
   ];
 
   const activePasses = passes.filter(pass => pass.status === 'active' && pass.endDate > new Date());
@@ -139,7 +168,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
       const newPass: Omit<MonthlyPass, 'id'> = {
         vehicleNumber: formData.vehicleNumber.toUpperCase(),
         passType: formData.passType,
-        vehicleType: selectedPassType?.vehicleType as 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+        vehicleType: selectedPassType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
         ownerName: formData.ownerName,
         ownerPhone: formData.ownerPhone,
         startDate,
@@ -157,8 +186,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
 
       setFormData({
         vehicleNumber: '',
-        passType: 'basic',
-        vehicleType: 'two-wheeler',
+        passType: 'cycle',
+        vehicleType: 'cycle',
         ownerName: '',
         ownerPhone: '',
         duration: '1'
@@ -290,8 +319,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
             const selectedType = passTypes.find(type => type.value === value);
             setFormData({
               ...formData, 
-              passType: value as 'basic' | 'standard' | 'premium',
-              vehicleType: selectedType?.vehicleType as 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
+              passType: value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+              vehicleType: selectedType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
             });
           }}
           className="space-y-3"
