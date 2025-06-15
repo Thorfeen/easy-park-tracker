@@ -239,6 +239,7 @@ const Index = () => {
 
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                {/* --- UPDATED: Active Vehicles stats card --- */}
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Active Vehicles</CardTitle>
@@ -248,31 +249,23 @@ const Index = () => {
                     <div className="text-2xl font-bold text-blue-600">{activeVehicles.length}</div>
                     <div className="space-y-1 mt-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1">
-                          <Bike className="h-3 w-3" />
-                          Cycles
-                        </span>
+                        <span>Helmets in Safe</span>
+                        <span className="font-medium">{helmetsInSafeCount}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Cycles</span>
                         <span className="font-medium">{activeCycles.length}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1">
-                          <Bike className="h-3 w-3" />
-                          Two Wheelers
-                        </span>
+                        <span>Two Wheelers</span>
                         <span className="font-medium">{activeTwoWheelers.length}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1">
-                          <Car className="h-3 w-3" />
-                          Three Wheelers
-                        </span>
+                        <span>Three Wheelers</span>
                         <span className="font-medium">{activeThreeWheelers.length}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1">
-                          <Truck className="h-3 w-3" />
-                          Four Wheelers
-                        </span>
+                        <span>Four Wheelers</span>
                         <span className="font-medium">{activeFourWheelers.length}</span>
                       </div>
                     </div>
