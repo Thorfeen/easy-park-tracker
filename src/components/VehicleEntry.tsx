@@ -11,6 +11,7 @@ import VehicleTypeSelector from "./vehicle-entry/VehicleTypeSelector";
 import HelmetSelector from "./vehicle-entry/HelmetSelector";
 import PassDetectionBanner from "./vehicle-entry/PassDetectionBanner";
 import ParkingRatesGrid from "./vehicle-entry/ParkingRatesGrid";
+import { format } from "date-fns";
 
 interface VehicleEntryProps {
   onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', helmet: boolean, toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
@@ -181,7 +182,9 @@ const VehicleEntry = ({
     }
   };
 
-  const currentTime = new Date().toLocaleString();
+  // Format current time in 12-hour format
+  const currentTime = format(new Date(), "hh:mm a");
+
   const vehicleTypes = [
     { value: 'cycle' as const, label: 'Cycle', icon: Bike, description: 'Bicycle only' },
     { value: 'two-wheeler' as const, label: 'Two Wheeler', icon: Bike, description: 'Motorcycles, Scooters' },
