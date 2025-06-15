@@ -375,6 +375,15 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
     );
   };
 
+  // Utility: Recent used passes sorted by lastUsedAt descending
+  const recentUsedPasses = passes
+    .filter(pass => pass.status === "active" && !!pass.lastUsedAt)
+    .sort((a, b) => {
+      const dateA = a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0;
+      const dateB = b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0;
+      return dateB - dateA;
+    });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
       <div className="max-w-4xl mx-auto">
@@ -401,7 +410,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
           <CardContent className="p-8">
             {currentView === 'overview' && (
               <div className="space-y-8">
-                {/* Create New Pass Button - Top */}
+                {/* Create New Pass Button */}
                 <Button
                   onClick={() => setCurrentView('create')}
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-3 text-lg font-semibold"
@@ -410,7 +419,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
                   Create New Monthly Pass
                 </Button>
 
-                {/* Interactive Stats Cards */}
+                {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <Card
                     className="bg-green-50 border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
@@ -446,25 +455,18 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
                   </Card>
                 </div>
 
-                {/* Recent Active Passes Preview */}
-                {activePasses.length > 0 && (
+                {/* Recently Used Passes Preview */}
+                {(recentUsedPasses.length > 0) && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">Recent Active Passes</h3>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentView('active')}
-                      >
-                        View All Active
-                      </Button>
+                      <h3 className="text-lg font-semibold">Recently Used Passes</h3>
                     </div>
                     <div className="space-y-3">
-                      {activePasses.slice(0, 3).map(renderPassCard)}
+                      {recentUsedPasses.slice(0, 3).map(renderPassCard)}
                     </div>
-                    {activePasses.length > 3 && (
+                    {recentUsedPasses.length > 3 && (
                       <p className="text-center text-gray-500 mt-4">
-                        And {activePasses.length - 3} more active passes...
+                        And {recentUsedPasses.length - 3} more recently used passes...
                       </p>
                     )}
                   </div>
