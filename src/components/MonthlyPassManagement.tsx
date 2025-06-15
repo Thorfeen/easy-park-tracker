@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -291,14 +290,9 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
             <div key={type.value} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
               <RadioGroupItem value={type.value} id={type.value} />
               <div className="flex-1">
-                <Label htmlFor={type.value} className="font-medium cursor-pointer">
+                <Label htmlFor={type.value} className="font-medium cursor-pointer capitalize">
                   {type.label}
-                  {type.aliases && type.aliases.length > 0 && (
-                    <span className="text-xs text-gray-400 ml-2">
-                      / {type.aliases.join(' / ')}
-                    </span>
-                  )}
-                  {' '} - ₹{type.price * parseInt(formData.duration)}/
+                  {" "} - ₹{type.price * parseInt(formData.duration)}/
                   {formData.duration === '1' ? 'month' : `${formData.duration} months`}
                 </Label>
                 <p className="text-sm text-gray-500">{type.description}</p>
