@@ -40,26 +40,8 @@ function toAppRecord(raw: RawRecord): ParkingRecord {
   };
 }
 
-// For insert: all required keys must be given!
-function fromAppRecordInsert(record: Omit<ParkingRecord, "id">): Omit<RawRecord, "id"> {
-  return {
-    vehicle_number: record.vehicleNumber,
-    vehicle_type: record.vehicleType,
-    entry_time: record.entryTime.toISOString(), // must be present
-    exit_time: record.exitTime ? record.exitTime.toISOString() : null,
-    duration: record.duration ?? null,
-    amount_due: record.amountDue ?? null,
-    status: record.status,
-    is_pass_holder: record.isPassHolder ?? null,
-    pass_id: record.passId ?? null,
-    calculation_breakdown: record.calculationBreakdown ?? null,
-    helmet: record.helmet ?? null,
-    created_at: null, // let db default
-  };
-}
-
-// For update: allow partials (all fields optional)
-function fromAppRecordUpdate(record: Partial<ParkingRecord>): Partial<RawRecord> {
+// For insert/update, only include correct keys
+function fromAppRecord(record: Partial<ParkingRecord>): Partial<RawRecord> {
   return {
     vehicle_number: record.vehicleNumber,
     vehicle_type: record.vehicleType,
@@ -70,7 +52,7 @@ function fromAppRecordUpdate(record: Partial<ParkingRecord>): Partial<RawRecord>
     status: record.status,
     is_pass_holder: record.isPassHolder,
     pass_id: record.passId,
-    calculation_breakdown: record.calculationBreakdown,
+    calculation_breakdown: record.calculationBreakdown ? record.calculationBreakdown : undefined,
     helmet: record.helmet,
     // created_at handled by db default
   };
@@ -99,27 +81,16 @@ export function useParkingRecords() {
     fetchRecords();
   }, [fetchRecords]);
 
-  // Fix: Strong type, so all required fields are present
+  // Proper type for insert!
   const addEntry = async (
     record: Omit<ParkingRecord, "id" | "status"> & { status?: ParkingRecord["status"] }
   ) => {
-    // status must be present (default to 'active' if not)
-    const fullRecord: Omit<ParkingRecord, "id"> = {
-      vehicleNumber: record.vehicleNumber,
-      vehicleType: record.vehicleType,
-      entryTime: record.entryTime,
-      exitTime: record.exitTime,
-      duration: record.duration,
-      amountDue: record.amountDue,
-      status: record.status ?? "active",
-      isPassHolder: record.isPassHolder,
-      passId: record.passId,
-      calculationBreakdown: record.calculationBreakdown,
-      helmet: record.helmet,
+    // Extract and set required fields for the insert (per table definition)
+    const toInsert = {
+      ...fromAppRecord({ ...record, status: "active" })
     };
-    const toInsert = fromAppRecordInsert(fullRecord);
 
-    // required fields check (extra runtime guard)
+    // required fields check
     if (
       !toInsert.vehicle_number ||
       !toInsert.vehicle_type ||
@@ -128,12 +99,8 @@ export function useParkingRecords() {
     ) {
       throw new Error("Missing required fields for parking record insert");
     }
-
-    // calculation_breakdown should be JSON (null if not present)
-    if (
-      toInsert.calculation_breakdown &&
-      !Array.isArray(toInsert.calculation_breakdown)
-    ) {
+    // calculation_breakdown is optional (should be JSON array if present)
+    if (toInsert.calculation_breakdown && !Array.isArray(toInsert.calculation_breakdown)) {
       toInsert.calculation_breakdown = [String(toInsert.calculation_breakdown)];
     }
 
@@ -155,7 +122,7 @@ export function useParkingRecords() {
   const updateExit = async (id: string, update: Partial<ParkingRecord>) => {
     const { data, error } = await supabase
       .from("parking_records")
-      .update(fromAppRecordUpdate(update))
+      .update(fromAppRecord(update))
       .eq("id", Number(id))
       .select()
       .single();
