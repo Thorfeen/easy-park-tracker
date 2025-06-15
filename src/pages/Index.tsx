@@ -201,6 +201,12 @@ const Index = () => {
     console.log('New monthly pass created:', newPass);
   };
 
+  // Added: Compute entry counts by vehicle type
+  const cycleEntriesCount = parkingRecords.filter(record => record.vehicleType === "cycle").length;
+  const twoWheelerEntriesCount = parkingRecords.filter(record => record.vehicleType === "two-wheeler").length;
+  const threeWheelerEntriesCount = parkingRecords.filter(record => record.vehicleType === "three-wheeler").length;
+  const fourWheelerEntriesCount = parkingRecords.filter(record => record.vehicleType === "four-wheeler").length;
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'entry':
@@ -314,6 +320,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
+                {/* Modified: Total Records Stats Card */}
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Records</CardTitle>
@@ -321,7 +328,24 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">{parkingRecords.length}</div>
-                    <p className="text-xs text-muted-foreground">All time entries</p>
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Cycle Entries</span>
+                        <span className="font-medium">{cycleEntriesCount}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Two-Wheeler Entries</span>
+                        <span className="font-medium">{twoWheelerEntriesCount}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Three-Wheeler Entries</span>
+                        <span className="font-medium">{threeWheelerEntriesCount}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Four-Wheeler Entries</span>
+                        <span className="font-medium">{fourWheelerEntriesCount}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
