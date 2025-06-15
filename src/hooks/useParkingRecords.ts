@@ -1,12 +1,10 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ParkingRecord } from "@/types/parking";
 
 // Use type as per Supabase table (all possible fields, required for insert)
 type RawRecord = {
--  id: number;
-+  id?: number;
+  id?: number; // Use only this, no duplicates!
   vehicle_number: string;
   vehicle_type: string;
   entry_time: string;
