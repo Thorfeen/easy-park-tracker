@@ -236,7 +236,8 @@ const VehicleEntry = ({
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Vehicle Type *</Label>
+                {/* Updated Vehicle Type heading */}
+                <span className="block font-semibold text-blue-700 mb-2">Vehicle Type:</span>
                 <div className="flex flex-row flex-wrap gap-6 items-stretch">
                   {/* Vehicle types */}
                   <VehicleTypeSelector value={vehicleType} onChange={handleVehicleTypeChange} />
