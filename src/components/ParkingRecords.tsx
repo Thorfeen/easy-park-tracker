@@ -65,30 +65,98 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     const doc = new jsPDF();
     const exportRecords = getExportFilteredRecords();
     
-    // Title
-    doc.setFontSize(20);
-    doc.text('Railway Parking Management - Records', 14, 22);
+    // Modern color scheme
+    const primaryColor = [79, 70, 229]; // Indigo
+    const secondaryColor = [236, 236, 241]; // Light gray
+    const accentColor = [99, 102, 241]; // Lighter indigo
     
-    // Date range
+    // Header with rounded background
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.roundedRect(10, 10, 190, 25, 3, 3, 'F');
+    
+    // Title with consistent font
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Railway Parking Management - Records', 105, 25, { align: 'center' });
+    
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+    
+    let yPosition = 45;
+    
+    // Date range section with modern styling
     if (exportDateFrom || exportDateTo) {
-      doc.setFontSize(12);
+      doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      doc.roundedRect(10, yPosition - 5, 190, 15, 2, 2, 'F');
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
       let dateText = 'Date Range: ';
       if (exportDateFrom) dateText += `From ${format(exportDateFrom, 'dd/MM/yyyy')} `;
       if (exportDateTo) dateText += `To ${format(exportDateTo, 'dd/MM/yyyy')}`;
-      doc.text(dateText, 14, 32);
+      doc.text(dateText, 15, yPosition + 3);
+      yPosition += 25;
     }
     
-    // Summary
+    // Summary section with modern cards layout
     const completedRecords = exportRecords.filter(r => r.status === 'completed');
     const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
     
-    doc.setFontSize(12);
-    doc.text(`Total Records: ${exportRecords.length}`, 14, 42);
-    doc.text(`Active Vehicles: ${exportRecords.filter(r => r.status === 'active').length}`, 14, 50);
-    doc.text(`Completed: ${completedRecords.length}`, 14, 58);
-    doc.text(`Total Revenue: ₹${totalRevenue}`, 14, 66);
+    // Summary title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('Summary', 15, yPosition);
+    yPosition += 10;
     
-    // Table
+    // Summary cards in a grid
+    const cardWidth = 45;
+    const cardHeight = 20;
+    const spacing = 2;
+    
+    // Card 1: Total Records
+    doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+    doc.roundedRect(10, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Total Records', 12, yPosition + 6);
+    doc.setFontSize(16);
+    doc.text(exportRecords.length.toString(), 12, yPosition + 15);
+    
+    // Card 2: Active Vehicles
+    doc.setFillColor(34, 197, 94); // Green
+    doc.roundedRect(10 + cardWidth + spacing, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Active Vehicles', 12 + cardWidth + spacing, yPosition + 6);
+    doc.setFontSize(16);
+    doc.text(exportRecords.filter(r => r.status === 'active').length.toString(), 12 + cardWidth + spacing, yPosition + 15);
+    
+    // Card 3: Completed
+    doc.setFillColor(59, 130, 246); // Blue
+    doc.roundedRect(10 + (cardWidth + spacing) * 2, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Completed', 12 + (cardWidth + spacing) * 2, yPosition + 6);
+    doc.setFontSize(16);
+    doc.text(completedRecords.length.toString(), 12 + (cardWidth + spacing) * 2, yPosition + 15);
+    
+    // Card 4: Total Revenue - Fixed font consistency
+    doc.setFillColor(168, 85, 247); // Purple
+    doc.roundedRect(10 + (cardWidth + spacing) * 3, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); // Consistent font
+    doc.setFontSize(10);
+    doc.text('Total Revenue', 12 + (cardWidth + spacing) * 3, yPosition + 6);
+    doc.setFontSize(16); // Consistent size
+    doc.text(`₹${totalRevenue}`, 12 + (cardWidth + spacing) * 3, yPosition + 15);
+    
+    yPosition += 35;
+    
+    // Reset text color for table
+    doc.setTextColor(0, 0, 0);
+    
+    // Table with modern styling
     const tableData = exportRecords.map(record => [
       record.vehicleNumber,
       record.vehicleType,
@@ -102,10 +170,37 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     autoTable(doc, {
       head: [['Vehicle Number', 'Type', 'Entry Time', 'Exit Time', 'Duration', 'Amount', 'Status']],
       body: tableData,
-      startY: 75,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [79, 70, 229] },
+      startY: yPosition,
+      styles: { 
+        fontSize: 9,
+        font: 'helvetica',
+        cellPadding: 3,
+        lineColor: [220, 220, 220],
+        lineWidth: 0.5
+      },
+      headStyles: { 
+        fillColor: primaryColor,
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 10
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251]
+      },
+      tableLineColor: [220, 220, 220],
+      tableLineWidth: 0.5,
+      theme: 'grid'
     });
+    
+    // Footer with rounded background
+    const finalY = (doc as any).lastAutoTable?.finalY || yPosition + 50;
+    doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    doc.roundedRect(10, finalY + 10, 190, 15, 2, 2, 'F');
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated on ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, finalY + 20, { align: 'center' });
     
     doc.save(`parking-records-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
