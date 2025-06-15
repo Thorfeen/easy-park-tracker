@@ -221,6 +221,16 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
                     </div>
                   </div>
 
+                  {/* Show Helmet info if applicable */}
+                  {(exitRecord.helmet && (exitRecord.vehicleType === 'cycle' || exitRecord.vehicleType === 'two-wheeler')) && (
+                    <div className="bg-blue-50 p-4 rounded border border-blue-200 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4v2M12 3a6 6 0 0 1 6 6c0 3.314-5.373 6-6 6s-6-2.686-6-6a6 6 0 0 1 6-6z" />
+                      </svg>
+                      <span className="font-medium text-blue-700">Helmet was used for this parking.</span>
+                    </div>
+                  )}
+
                   {/* Calculation breakdown */}
                   {exitRecord.calculationBreakdown && (
                     <div className="bg-white p-4 rounded border">
@@ -261,3 +271,5 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
 };
 
 export default VehicleExit;
+
+// -------------- WARNING: This file is getting long. Please consider asking for a refactor into smaller components!

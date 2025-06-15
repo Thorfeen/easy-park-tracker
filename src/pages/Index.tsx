@@ -77,6 +77,7 @@ const Index = () => {
   const addVehicleEntry = (
     vehicleNumber: string,
     vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    helmet?: boolean,
     showToast?: (args: { title: string, description: string, variant?: string }) => void
   ) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
@@ -113,6 +114,7 @@ const Index = () => {
       status: 'active',
       isPassHolder: !!matchedPass,
       passId: matchedPass?.id,
+      helmet: helmet || false,
     };
     setParkingRecords(prev => [...prev, newRecord]);
     console.log('New vehicle entry added:', newRecord);
@@ -133,7 +135,7 @@ const Index = () => {
     const exitTime = new Date();
     const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
-
+    const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
     let amountDue = 0;
     let calculationBreakdown: string[] = [];
 
@@ -141,7 +143,6 @@ const Index = () => {
     const activePass = findActivePass(upperVehicleNumber, activeRecord.vehicleType);
 
     if (activePass && activePass.endDate > new Date()) {
-      // Pass holder - no charges
       amountDue = 0;
       calculationBreakdown = [`Monthly Pass Holder (${activePass.vehicleType.toUpperCase()}): ₹0`];
     } else {
@@ -152,18 +153,24 @@ const Index = () => {
         exitTime
       );
       amountDue = amount;
-      calculationBreakdown = breakdown;
+      calculationBreakdown = [...breakdown];
+      // Apply helmet if present and vehicle is cycle or two-wheeler
+      if (activeRecord.helmet && (activeRecord.vehicleType === 'cycle' || activeRecord.vehicleType === 'two-wheeler')) {
+        const helmetCharge = durationDays * 2;
+        amountDue += helmetCharge;
+        calculationBreakdown.push(`Helmet Charges: ₹2 x ${durationDays} day(s) = ₹${helmetCharge}`);
+      }
     }
-
     const updatedRecord = {
       ...activeRecord,
       exitTime,
       duration: durationHours,
       amountDue,
-      calculationBreakdown, // <-- Pass this to VehicleExit for display
+      calculationBreakdown,
       status: 'completed' as const,
       isPassHolder: !!activePass,
-      passId: activePass?.id
+      passId: activePass?.id,
+      helmet: activeRecord.helmet || false,
     };
 
     setParkingRecords(prev =>
@@ -193,8 +200,9 @@ const Index = () => {
             onAddEntry={(
               vehicleNumber: string,
               vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
-              toastCallback?: (args: { title: string, description: string, variant?: string }) => void
-            ) => addVehicleEntry(vehicleNumber, vehicleType, toastCallback)}
+              helmet?: boolean,
+              toastCallback?: (args: { title: string; description: string; variant?: string }) => void
+            ) => addVehicleEntry(vehicleNumber, vehicleType, helmet, toastCallback)}
             onBack={() => setCurrentView('dashboard')}
             // Now only matches pass if BOTH number and type match
             findActivePass={findActivePass}

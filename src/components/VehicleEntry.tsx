@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDurationFull } from "@/utils/parkingCharges";
 
 interface VehicleEntryProps {
-  onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
+  onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', helmet: boolean, toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
   onBack: () => void;
   findActivePass: (vehicleNumber: string, vehicleType?: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => any | null;
   onUpdatePassLastUsedAt: (passId: string) => void;
@@ -61,12 +61,19 @@ const pricingDetails = [
   }
 ];
 
-const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsedAt, findActiveVehicle }: VehicleEntryProps) => {
+const VehicleEntry = ({
+  onAddEntry,
+  onBack,
+  findActivePass,
+  onUpdatePassLastUsedAt,
+  findActiveVehicle,
+}: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleType, setVehicleType] = useState<'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const [passTypeMismatch, setPassTypeMismatch] = useState(false);
+  const [helmet, setHelmet] = useState(false);
   const { toast } = useToast();
 
   // Helper to safely call toast callback
@@ -93,6 +100,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
     setVehicleType('two-wheeler');
     setDetectedPass(null);
     setPassTypeMismatch(false);
+    setHelmet(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,7 +127,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
     setIsSubmitting(true);
 
     // Pass the safeToastCallback in onAddEntry for granular error feedback
-    const result = onAddEntry(vehicleNumber, vehicleType, safeToastCallback);
+    const result = onAddEntry(vehicleNumber, vehicleType, helmet, safeToastCallback);
 
     if (result === false) {
       setIsSubmitting(false);
@@ -163,6 +171,10 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
   const handleVehicleTypeChange = (value: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
     setVehicleType(value);
     checkForPass(vehicleNumber, value);
+    // Reset helmet option if changed to unsupported type
+    if (value !== 'cycle' && value !== 'two-wheeler') {
+      setHelmet(false);
+    }
   };
 
   const currentTime = new Date().toLocaleString();
@@ -252,33 +264,73 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
 
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Vehicle Type *</Label>
-                <RadioGroup
-                  value={vehicleType}
-                  onValueChange={handleVehicleTypeChange}
-                  className="flex flex-row gap-6 flex-wrap"
-                >
-                  {vehicleTypes.map((type) => {
-                    const Icon = type.icon;
-                    return (
-                      <div
-                        key={type.value}
-                        className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer w-36 h-40 transition-all duration-200 gap-2"
-                        style={{ minWidth: '144px', maxWidth: '144px', minHeight: '160px', maxHeight: '160px' }}
-                      >
-                        <RadioGroupItem value={type.value} id={type.value} />
-                        <div className="flex flex-col items-center mt-2">
-                          <Icon className="h-8 w-8 text-gray-600 mb-1" />
-                          <Label htmlFor={type.value} className="font-medium cursor-pointer">
-                            {type.label}
-                          </Label>
-                          <p className="text-xs text-gray-500 text-center break-words">
-                            {type.description}
-                          </p>
+                <div className="flex flex-row gap-6 flex-wrap">
+                  <RadioGroup
+                    value={vehicleType}
+                    onValueChange={handleVehicleTypeChange}
+                    className="flex flex-row gap-6 flex-wrap"
+                  >
+                    {vehicleTypes.map((type) => {
+                      const Icon = type.icon;
+                      return (
+                        <div
+                          key={type.value}
+                          className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer w-36 h-40 transition-all duration-200 gap-2"
+                          style={{ minWidth: '144px', maxWidth: '144px', minHeight: '160px', maxHeight: '160px' }}
+                        >
+                          <RadioGroupItem value={type.value} id={type.value} />
+                          <div className="flex flex-col items-center mt-2">
+                            <Icon className="h-8 w-8 text-gray-600 mb-1" />
+                            <Label htmlFor={type.value} className="font-medium cursor-pointer">
+                              {type.label}
+                            </Label>
+                            <p className="text-xs text-gray-500 text-center break-words">
+                              {type.description}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </RadioGroup>
+                      );
+                    })}
+                  </RadioGroup>
+
+                  {/* Helmet Card */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      (vehicleType === 'cycle' || vehicleType === 'two-wheeler')
+                        ? setHelmet((h) => !h)
+                        : null
+                    }
+                    className={`
+                      flex flex-col items-center justify-center p-4 border rounded-lg transition-all duration-200 gap-2
+                      w-36 h-40
+                      ${helmet ? 'border-blue-600 bg-blue-50 shadow' : 'hover:bg-gray-50'}
+                      ${vehicleType === 'cycle' || vehicleType === 'two-wheeler'
+                        ? 'cursor-pointer opacity-100'
+                        : 'cursor-not-allowed opacity-40'}
+                    `}
+                    style={{ minWidth: '144px', maxWidth: '144px', minHeight: '160px', maxHeight: '160px' }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4v2M12 3a6 6 0 0 1 6 6c0 3.314-5.373 6-6 6s-6-2.686-6-6a6 6 0 0 1 6-6z" />
+                    </svg>
+                    <Label className="font-medium">Helmet</Label>
+                    <p className="text-xs text-gray-500 text-center break-words">
+                      Add helmet for ₹2/day
+                    </p>
+                    <div className="mt-2">
+                      <input
+                        type="checkbox"
+                        checked={helmet}
+                        disabled={!(vehicleType === 'cycle' || vehicleType === 'two-wheeler')}
+                        readOnly
+                        className="accent-blue-600 h-5 w-5 outline-none"
+                        tabIndex={-1}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">

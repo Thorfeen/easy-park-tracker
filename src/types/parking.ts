@@ -32,5 +32,6 @@ export interface ParkingRecord {
   status: 'active' | 'completed';
   isPassHolder?: boolean;
   passId?: string;
-  calculationBreakdown?: string[]; // <-- Added for detailed charge breakdowns
+  calculationBreakdown?: string[];
+  helmet?: boolean; // ADDED: Track helmet usage
 }
