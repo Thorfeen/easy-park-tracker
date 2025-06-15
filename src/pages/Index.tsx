@@ -12,6 +12,7 @@ import RevenueCard from "@/components/RevenueCard";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
 import { useParkingRecords } from "@/hooks/useParkingRecords";
 import { useMonthlyPasses } from "@/hooks/useMonthlyPasses";
+import { format } from "date-fns";
 
 const Index = () => {
   // Get current user
@@ -330,7 +331,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {record.entryTime.toLocaleTimeString()}
+                                    {format(record.entryTime, "h:mm a")}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -357,7 +358,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {record.entryTime.toLocaleTimeString()}
+                                    {format(record.entryTime, "h:mm a")}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -384,7 +385,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {record.entryTime.toLocaleTimeString()}
+                                    {format(record.entryTime, "h:mm a")}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">

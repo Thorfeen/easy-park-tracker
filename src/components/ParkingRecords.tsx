@@ -500,9 +500,13 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                     {filteredRecords.map((record) => (
                       <TableRow key={record.id} className="hover:bg-gray-50">
                         <TableCell className="font-medium">{record.vehicleNumber}</TableCell>
-                        <TableCell>{record.entryTime.toLocaleString()}</TableCell>
                         <TableCell>
-                          {record.exitTime ? record.exitTime.toLocaleString() : '-'}
+                          {format(record.entryTime, "h:mm a, dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          {record.exitTime
+                            ? format(record.exitTime, "h:mm a, dd/MM/yyyy")
+                            : '-'}
                         </TableCell>
                         <TableCell>{formatDuration(record.duration)}</TableCell>
                         <TableCell>
