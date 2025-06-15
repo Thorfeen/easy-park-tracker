@@ -265,7 +265,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4">
       <div className="max-w-7xl mx-auto">
         <Button 
           variant="ghost" 
@@ -277,12 +277,12 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         </Button>
 
         <Card className="bg-white shadow-xl mb-6">
-          <CardHeader className="text-center bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
+          <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
             <div className="flex justify-center mb-4">
               <History className="h-16 w-16" />
             </div>
             <CardTitle className="text-2xl">Parking Records</CardTitle>
-            <CardDescription className="text-purple-100">
+            <CardDescription className="text-orange-100">
               Complete history of all vehicle entries and exits
             </CardDescription>
           </CardHeader>
@@ -295,7 +295,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                   <Clock className="h-5 w-5 text-blue-600" />
                   <div>
                     <p className="text-sm text-blue-600">Active Vehicles</p>
-                    <p className="text-2xl font-bold text-blue-700">{activeCount}</p>
+                    <p className="text-2xl font-bold text-blue-700">{records.filter(r => r.status === 'active').length}</p>
                   </div>
                 </div>
               </div>
@@ -305,17 +305,22 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                   <History className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="text-sm text-green-600">Completed</p>
-                    <p className="text-2xl font-bold text-green-700">{completedCount}</p>
+                    <p className="text-2xl font-bold text-green-700">{records.filter(r => r.status === 'completed').length}</p>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                 <div className="flex items-center gap-2">
-                  <IndianRupee className="h-5 w-5 text-purple-600" />
+                  <IndianRupee className="h-5 w-5 text-orange-600" />
                   <div>
-                    <p className="text-sm text-purple-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-purple-700">₹{totalRevenue}</p>
+                    <p className="text-sm text-orange-600">Total Revenue</p>
+                    <p className="text-2xl font-bold text-orange-700">
+                      ₹{records
+                        .filter(r => r.status === 'completed')
+                        .reduce((sum, record) => sum + (record.amountDue || 0), 0)
+                      }
+                    </p>
                   </div>
                 </div>
               </div>
