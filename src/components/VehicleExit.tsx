@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Clock, Car, AlertCircle, ScanLine, IndianRupee, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ParkingRecord } from "@/pages/Index";
+import { ParkingRecord } from "@/types/parking";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import VehicleScanner from "./VehicleScanner";
 
