@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,91 +8,50 @@ import VehicleExit from "@/components/VehicleExit";
 import ParkingRecords from "@/components/ParkingRecords";
 import MonthlyPassManagement from "@/components/MonthlyPassManagement";
 import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard } from "lucide-react";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import RevenueCard from "@/components/RevenueCard";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
-import { useParkingRecords } from "@/hooks/useParkingRecords";
-import { useMonthlyPasses } from "@/hooks/useMonthlyPasses";
-import { format } from "date-fns";
-import TotalRecordsCard from "@/components/TotalRecordsCard";
 
 const Index = () => {
-  // Get current user
-  const [userId, setUserId] = useState<string | undefined>();
-
-  useEffect(() => {
-    // Use supabase auth to get user id
-    import("@/integrations/supabase/client").then(({ supabase }) => {
-      supabase.auth.getUser().then((result) => {
-        setUserId(result.data.user?.id);
-      });
-    });
-  }, []);
-
-  // Fix: Correctly type only the state, not the setter function
   const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
+  const [parkingRecords, setParkingRecords] = useState<ParkingRecord[]>([]);
+  const [monthlyPasses, setMonthlyPasses] = useState<MonthlyPass[]>([]);
+  const isMobile = useMobileDetection();
 
-  const {
-    parkingRecords,
-    isLoading: recordsLoading,
-    error: recordsError,
-    createParkingRecord,
-    updateParkingRecord,
-    refetch: refetchParkingRecords,
-  } = useParkingRecords(userId);
-
-  const {
-    monthlyPasses,
-    isLoading: passesLoading,
-    error: passesError,
-    createMonthlyPass,
-    refetch: refetchMonthlyPasses,
-  } = useMonthlyPasses(userId);
-
-  // Calculate total monthly pass revenue (sum of all passes' amount)
-  const monthlyPassRevenue = monthlyPasses.reduce((sum, pass) => sum + (pass.amount || 0), 0);
-
-  // The following aggregation logic remains mostly unchanged, but now references the fetched records
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
   const activeTwoWheelers = activeVehicles.filter(record => record.vehicleType === 'two-wheeler');
   const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
   const activeFourWheelers = activeVehicles.filter(record => record.vehicleType === 'four-wheeler');
   const completedRecords = parkingRecords.filter(record => record.status === 'completed');
-
-  // Now sum both sources for total revenue
-  const totalRevenue =
-    completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0) +
-    monthlyPassRevenue;
-
+  const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
   const activePasses = monthlyPasses.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const passHolderVehicles = activeVehicles.filter(record => record.isPassHolder);
 
   const findActivePass = (vehicleNumber: string): MonthlyPass | null => {
     return monthlyPasses.find(
-      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() &&
-        pass.status === 'active' &&
-        pass.endDate > new Date()
+      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() && 
+      pass.status === 'active' && 
+      pass.endDate > new Date()
     ) || null;
   };
 
-  // Persist vehicle entry to the DB
-  const addVehicleEntry = (
-    vehicleNumber: string,
-    vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
-  ) => {
+  const addVehicleEntry = (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activePass = findActivePass(upperVehicleNumber);
-
-    createParkingRecord.mutate({
+    
+    const newRecord: ParkingRecord = {
+      id: Date.now().toString(),
       vehicleNumber: upperVehicleNumber,
       vehicleType,
       entryTime: new Date(),
-      status: "active",
+      status: 'active',
       isPassHolder: !!activePass,
-      passId: activePass?.id,
-    });
+      passId: activePass?.id
+    };
+    setParkingRecords(prev => [...prev, newRecord]);
+    console.log('New vehicle entry added:', newRecord);
   };
 
-  // Process vehicle exit and update record in DB
   const processVehicleExit = (vehicleNumber: string) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activeRecord = parkingRecords.find(
@@ -103,14 +63,14 @@ const Index = () => {
     }
 
     const exitTime = new Date();
-    const durationMs = exitTime.getTime() - new Date(activeRecord.entryTime!).getTime();
+    const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
-
+    
     let amountDue = 0;
-
+    
     // Check if vehicle has active pass
     const activePass = findActivePass(upperVehicleNumber);
-
+    
     if (activePass && activePass.endDate > new Date()) {
       // Pass holder - no charges
       amountDue = 0;
@@ -124,32 +84,33 @@ const Index = () => {
       }
     }
 
-    updateParkingRecord.mutate({
-      recordId: activeRecord.id,
-      fields: {
-        exitTime,
-        duration: durationHours,
-        amountDue,
-        status: "completed",
-        isPassHolder: !!activePass,
-        passId: activePass?.id,
-      },
-    });
-
-    return {
+    const updatedRecord = {
       ...activeRecord,
       exitTime,
       duration: durationHours,
       amountDue,
-      status: "completed" as const,
+      status: 'completed' as const,
       isPassHolder: !!activePass,
       passId: activePass?.id
     };
+
+    setParkingRecords(prev =>
+      prev.map(record =>
+        record.id === activeRecord.id ? updatedRecord : record
+      )
+    );
+
+    console.log('Vehicle exit processed:', updatedRecord);
+    return updatedRecord;
   };
 
-  // Add monthly pass via DB
   const addMonthlyPass = (passData: Omit<MonthlyPass, 'id'>) => {
-    createMonthlyPass.mutate(passData);
+    const newPass: MonthlyPass = {
+      ...passData,
+      id: Date.now().toString()
+    };
+    setMonthlyPasses(prev => [...prev, newPass]);
+    console.log('New monthly pass created:', newPass);
   };
 
   const renderCurrentView = () => {
@@ -161,15 +122,7 @@ const Index = () => {
       case 'records':
         return <ParkingRecords records={parkingRecords} passes={monthlyPasses} onBack={() => setCurrentView('dashboard')} />;
       case 'passes':
-        // Add userId prop as required
-        return (
-          <MonthlyPassManagement
-            passes={monthlyPasses}
-            onAddPass={addMonthlyPass}
-            onBack={() => setCurrentView('dashboard')}
-            userId={userId}
-          />
-        );
+        return <MonthlyPassManagement passes={monthlyPasses} onAddPass={addMonthlyPass} onBack={() => setCurrentView('dashboard')} />;
       default:
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -234,20 +187,26 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
-                {/* REPLACE OLD TOTAL RECORDS CARD WITH THE NEW ONE */}
-                <TotalRecordsCard records={parkingRecords} />
+                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+                    <History className="h-4 w-4 text-green-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">{parkingRecords.length}</div>
+                    <p className="text-xs text-muted-foreground">All time entries</p>
+                  </CardContent>
+                </Card>
 
-                <RevenueCard records={parkingRecords} monthlyPasses={monthlyPasses} />
+                <RevenueCard records={parkingRecords} />
               </div>
 
               {/* Action Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                {/* Vehicle Entry */}
                 <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('entry')}>
                   <CardHeader className="text-center">
-                    {/* ALWAYS desktop icon (Car) */}
-                    <Car className="h-12 w-12 mx-auto mb-4" />
+                    {isMobile ? <ScanLine className="h-12 w-12 mx-auto mb-4" /> : <Car className="h-12 w-12 mx-auto mb-4" />}
                     <CardTitle className="text-xl">Vehicle Entry</CardTitle>
                     <CardDescription className="text-blue-100">
                       Register new vehicle arrival
@@ -255,17 +214,15 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="text-center">
                     <Button variant="secondary" className="w-full">
-                      Add New Entry
+                      {isMobile ? "Scan New Entry" : "Add New Entry"}
                     </Button>
                   </CardContent>
                 </Card>
 
-                {/* Vehicle Exit */}
                 <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('exit')}>
                   <CardHeader className="text-center">
-                    {/* ALWAYS desktop icon (Clock) */}
-                    <Clock className="h-12 w-12 mx-auto mb-4" />
+                    {isMobile ? <ScanLine className="h-12 w-12 mx-auto mb-4" /> : <Clock className="h-12 w-12 mx-auto mb-4" />}
                     <CardTitle className="text-xl">Vehicle Exit</CardTitle>
                     <CardDescription className="text-green-100">
                       Process vehicle departure
@@ -273,12 +230,11 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="text-center">
                     <Button variant="secondary" className="w-full">
-                      Process Exit
+                      {isMobile ? "Scan Process Exit" : "Process Exit"}
                     </Button>
                   </CardContent>
                 </Card>
 
-                {/* Monthly Passes */}
                 <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('passes')}>
                   <CardHeader className="text-center">
@@ -295,7 +251,6 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
-                {/* View Records */}
                 <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('records')}>
                   <CardHeader className="text-center">
@@ -336,7 +291,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {format(record.entryTime, "h:mm a")}
+                                    {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -363,7 +318,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {format(record.entryTime, "h:mm a")}
+                                    {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -390,7 +345,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {format(record.entryTime, "h:mm a")}
+                                    {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">

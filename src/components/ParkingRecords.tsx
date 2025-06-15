@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,42 +63,33 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF('p', 'mm', 'a4');
+    const doc = new jsPDF('p', 'mm', 'a4'); // Set to A4 format
     const exportRecords = getExportFilteredRecords();
-
-    const primaryColor: [number, number, number] = [79, 70, 229];
-    const secondaryColor: [number, number, number] = [236, 236, 241];
-    const accentColor: [number, number, number] = [99, 102, 241];
-
+    
+    // Modern color scheme - properly typed as tuples
+    const primaryColor: [number, number, number] = [79, 70, 229]; // Indigo
+    const secondaryColor: [number, number, number] = [236, 236, 241]; // Light gray
+    const accentColor: [number, number, number] = [99, 102, 241]; // Lighter indigo
+    
+    // Set consistent font for entire document
     doc.setFont('helvetica', 'normal');
-
+    
     // Header with rounded background
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.roundedRect(10, 10, 190, 25, 3, 3, 'F');
-
+    
     // Title with consistent font
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.text('Railway Parking Management - Records', 105, 25, { align: 'center' });
-
-    // Add generated date/time under header in 12-hour format
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.text(
-      `Generated on ${format(new Date(), 'dd/MM/yyyy h:mm a')}`,
-      105,
-      33,
-      { align: 'center' }
-    );
-
+    
     // Reset text color and font
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'normal');
-
+    
     let yPosition = 45;
-
+    
     // Date range section with modern styling
     if (exportDateFrom || exportDateTo) {
       doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
@@ -162,7 +154,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     doc.setFontSize(10);
     doc.text('Total Revenue', 12 + (cardWidth + spacing) * 3, yPosition + 6);
     doc.setFontSize(16); // Consistent size
-    doc.text(`Rs. ${totalRevenue}`, 12 + (cardWidth + spacing) * 3, yPosition + 15);
+    doc.text(`₹${totalRevenue}`, 12 + (cardWidth + spacing) * 3, yPosition + 15);
     
     yPosition += 35;
     
@@ -173,12 +165,10 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     const tableData = exportRecords.map(record => [
       record.vehicleNumber,
       record.vehicleType,
-      format(record.entryTime, "h:mm a, dd/MM/yyyy"),
-      record.exitTime ? format(record.exitTime, "h:mm a, dd/MM/yyyy") : '-',
+      record.entryTime.toLocaleString(),
+      record.exitTime ? record.exitTime.toLocaleString() : '-',
       record.duration ? `${record.duration} hours` : '-',
-      (record.status === 'completed' && record.isPassHolder)
-        ? "Pass"
-        : (record.amountDue ? `Rs. ${record.amountDue}` : '-'),
+      record.amountDue ? `₹${record.amountDue}` : '-',
       record.status
     ]);
     
@@ -208,6 +198,16 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       theme: 'grid'
     });
     
+    // Footer with rounded background
+    const finalY = (doc as any).lastAutoTable?.finalY || yPosition + 50;
+    doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    doc.roundedRect(10, finalY + 10, 190, 15, 2, 2, 'F');
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated on ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, finalY + 20, { align: 'center' });
+    
     doc.save(`parking-records-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
@@ -220,9 +220,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       'Entry Time': record.entryTime.toLocaleString(),
       'Exit Time': record.exitTime ? record.exitTime.toLocaleString() : '-',
       'Duration (Hours)': record.duration || '-',
-      'Amount (₹)': (record.status === 'completed' && record.isPassHolder)
-        ? "Pass"
-        : (record.amountDue || '-'),
+      'Amount (₹)': record.amountDue || '-',
       'Status': record.status
     }));
     
@@ -248,6 +246,12 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     XLSX.writeFile(workbook, `parking-records-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
   };
 
+  const activeCount = records.filter(r => r.status === 'active').length;
+  const completedCount = records.filter(r => r.status === 'completed').length;
+  const totalRevenue = records
+    .filter(r => r.status === 'completed')
+    .reduce((sum, record) => sum + (record.amountDue || 0), 0);
+
   const formatDuration = (hours?: number) => {
     if (!hours) return '-';
     return hours === 1 ? '1 hour' : `${hours} hours`;
@@ -255,27 +259,9 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
 
   const getStatusBadge = (status: string) => {
     if (status === 'active') {
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-700 rounded-full">Active</Badge>;
+      return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Active</Badge>;
     }
-    return (
-      <Badge
-        variant="default"
-        className="bg-green-100 text-green-700 rounded-full hover:bg-green-200 !important"
-        style={{ transition: 'background 0.2s' }}
-      >
-        Completed
-      </Badge>
-    );
-  };
-
-  const renderAmountCell = (record: ParkingRecord) => {
-    if (record.status === 'completed' && record.isPassHolder)
-      return (
-        <span className="inline-block bg-purple-100 text-purple-700 rounded-full px-2.5 py-0.5 text-xs font-semibold">
-          Pass
-        </span>
-      );
-    return record.amountDue ? `₹${record.amountDue}` : '-';
+    return <Badge variant="default" className="bg-green-100 text-green-700">Completed</Badge>;
   };
 
   return (
@@ -302,6 +288,44 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
           </CardHeader>
           
           <CardContent className="p-6">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-blue-600">Active Vehicles</p>
+                    <p className="text-2xl font-bold text-blue-700">{records.filter(r => r.status === 'active').length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2">
+                  <History className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-sm text-green-600">Completed</p>
+                    <p className="text-2xl font-bold text-green-700">{records.filter(r => r.status === 'completed').length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <div className="flex items-center gap-2">
+                  <IndianRupee className="h-5 w-5 text-orange-600" />
+                  <div>
+                    <p className="text-sm text-orange-600">Total Revenue</p>
+                    <p className="text-2xl font-bold text-orange-700">
+                      ₹{records
+                        .filter(r => r.status === 'completed')
+                        .reduce((sum, record) => sum + (record.amountDue || 0), 0)
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Export Section */}
             <Card className="mb-6 bg-gray-50">
               <CardHeader>
@@ -438,14 +462,14 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                   onClick={() => setFilterStatus('active')}
                   size="sm"
                 >
-                  Active ({records.filter(r => r.status === 'active').length})
+                  Active ({activeCount})
                 </Button>
                 <Button
                   variant={filterStatus === 'completed' ? 'default' : 'outline'}
                   onClick={() => setFilterStatus('completed')}
                   size="sm"
                 >
-                  Completed ({records.filter(r => r.status === 'completed').length})
+                  Completed ({completedCount})
                 </Button>
               </div>
             </div>
@@ -476,17 +500,13 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                     {filteredRecords.map((record) => (
                       <TableRow key={record.id} className="hover:bg-gray-50">
                         <TableCell className="font-medium">{record.vehicleNumber}</TableCell>
+                        <TableCell>{record.entryTime.toLocaleString()}</TableCell>
                         <TableCell>
-                          {format(record.entryTime, "h:mm a, dd/MM/yyyy")}
-                        </TableCell>
-                        <TableCell>
-                          {record.exitTime
-                            ? format(record.exitTime, "h:mm a, dd/MM/yyyy")
-                            : '-'}
+                          {record.exitTime ? record.exitTime.toLocaleString() : '-'}
                         </TableCell>
                         <TableCell>{formatDuration(record.duration)}</TableCell>
                         <TableCell>
-                          {renderAmountCell(record)}
+                          {record.amountDue ? `₹${record.amountDue}` : '-'}
                         </TableCell>
                         <TableCell>{getStatusBadge(record.status)}</TableCell>
                       </TableRow>

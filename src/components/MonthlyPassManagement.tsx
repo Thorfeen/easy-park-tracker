@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,18 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CreditCard, User, Phone, Car, Calendar, Plus, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MonthlyPass } from "@/types/parking";
-import { useParkingRecords } from "@/hooks/useParkingRecords";
 
 interface MonthlyPassManagementProps {
   passes: MonthlyPass[];
   onAddPass: (pass: Omit<MonthlyPass, 'id'>) => void;
   onBack: () => void;
-  userId: string | undefined;
 }
 
 type ViewState = 'overview' | 'active' | 'expired' | 'all' | 'create';
 
-const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPassManagementProps) => {
+const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagementProps) => {
   const [currentView, setCurrentView] = useState<ViewState>('overview');
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
@@ -33,9 +32,6 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Fetch parking records data
-  const { parkingRecords } = useParkingRecords(userId);
-
   const passTypes = [
     { value: 'basic', label: 'Basic Pass', price: 500, description: 'For Two Wheelers', vehicleType: 'two-wheeler' },
     { value: 'standard', label: 'Standard Pass', price: 800, description: 'For Three Wheelers', vehicleType: 'three-wheeler' },
@@ -44,35 +40,6 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
 
   const activePasses = passes.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const expiredPasses = passes.filter(pass => pass.status === 'expired' || pass.endDate <= new Date());
-
-  // --- Recently Used Passes logic ---
-  // For each active pass, find the most recent usage (entry or exit) in parkingRecords
-  function getLatestUsageForPass(passId: string) {
-    const records = parkingRecords.filter((rec) => rec.passId === passId);
-    if (records.length === 0) return null;
-    // For each record, get max of entryTime/exitTime; pick the latest among all records
-    let latestDate: Date | null = null;
-    records.forEach((rec) => {
-      [rec.entryTime, rec.exitTime]
-        .filter(Boolean)
-        .forEach((dt) => {
-          if (dt && (!latestDate || dt > latestDate)) {
-            latestDate = dt;
-          }
-        });
-    });
-    return latestDate;
-  }
-
-  // Enrich the activePasses with latestUsage
-  const recentlyUsedPasses = activePasses
-    .map(pass => ({
-      ...pass,
-      latestUsage: getLatestUsageForPass(pass.id) || pass.startDate // Fallback to startDate if never used
-    }))
-    .sort((a, b) =>
-      (b.latestUsage ? (b.latestUsage as Date).getTime() : 0) - (a.latestUsage ? (a.latestUsage as Date).getTime() : 0)
-    );
 
   const getFilteredPasses = () => {
     let filteredPasses = passes;
@@ -443,18 +410,25 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
                   </Card>
                 </div>
 
-                {/* Recently Used Passes Preview */}
-                {recentlyUsedPasses.length > 0 && (
+                {/* Recent Active Passes Preview */}
+                {activePasses.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">Recently Used Passes</h3>
+                      <h3 className="text-lg font-semibold">Recent Active Passes</h3>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setCurrentView('active')}
+                      >
+                        View All Active
+                      </Button>
                     </div>
                     <div className="space-y-3">
-                      {recentlyUsedPasses.slice(0, 3).map(renderPassCard)}
+                      {activePasses.slice(0, 3).map(renderPassCard)}
                     </div>
-                    {recentlyUsedPasses.length > 3 && (
+                    {activePasses.length > 3 && (
                       <p className="text-center text-gray-500 mt-4">
-                        And {recentlyUsedPasses.length - 3} more active passes...
+                        And {activePasses.length - 3} more active passes...
                       </p>
                     )}
                   </div>
