@@ -18,35 +18,39 @@ const vehicleTypes = [
 ];
 
 const VehicleTypeSelector = ({ value, onChange }: VehicleTypeSelectorProps) => (
-  <div className="flex flex-row flex-wrap gap-6 items-stretch">
-    <RadioGroup
-      value={value}
-      onValueChange={onChange}
-      className="flex flex-row flex-wrap gap-6 items-stretch"
-    >
-      {vehicleTypes.map((type) => {
-        const Icon = type.icon;
-        return (
-          <div
-            key={type.value}
-            className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer w-36 h-40 transition-all duration-200 gap-2"
-            style={{ minWidth: '144px', maxWidth: '144px', minHeight: '160px', maxHeight: '160px' }}
-          >
-            <RadioGroupItem value={type.value} id={type.value} />
-            <div className="flex flex-col items-center mt-2">
-              <Icon className="h-8 w-8 text-gray-600 mb-1" />
-              <Label htmlFor={type.value} className="font-medium cursor-pointer">
-                {type.label}
-              </Label>
-              <p className="text-xs text-gray-500 text-center break-words">
-                {type.description}
-              </p>
-            </div>
+  <RadioGroup
+    value={value}
+    onValueChange={onChange}
+    className="flex flex-row gap-4 items-center"
+  >
+    {vehicleTypes.map((type) => {
+      const Icon = type.icon;
+      return (
+        <Label
+          key={type.value}
+          htmlFor={type.value}
+          className={`flex flex-row items-center px-4 py-2 border rounded-lg cursor-pointer transition-all duration-200 gap-2 ${
+            value === type.value
+              ? "border-blue-500 bg-blue-50 shadow"
+              : "border-gray-200 bg-white hover:bg-gray-50"
+          }`}
+          style={{ minWidth: "210px" }}
+        >
+          <RadioGroupItem
+            value={type.value}
+            id={type.value}
+            className="mr-2"
+          />
+          <Icon className="h-7 w-7 text-gray-600 mx-2" />
+          <div className="flex flex-col justify-center">
+            <span className="font-medium">{type.label}</span>
+            <span className="text-xs text-gray-500">{type.description}</span>
           </div>
-        );
-      })}
-    </RadioGroup>
-  </div>
+        </Label>
+      );
+    })}
+  </RadioGroup>
 );
 
 export default VehicleTypeSelector;
+
