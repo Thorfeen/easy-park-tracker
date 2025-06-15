@@ -274,7 +274,6 @@ const VehicleEntry = ({
                       );
                     })}
                   </RadioGroup>
-
                   {/* Helmet Card: placed in the same flex row for alignment */}
                   <div
                     role="button"
@@ -313,27 +312,13 @@ const VehicleEntry = ({
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Entry Details:</h3>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  <li>• Entry time will be automatically recorded</li>
-                  <li>• Vehicle will be marked as active in the system</li>
-                  {detectedPass && !passTypeMismatch ? (
-                    <li className="text-green-600 font-medium">• Free parking for monthly pass holders</li>
-                  ) : (
-                    <li>• Parking charges as per rates below</li>
-                  )}
-                  {passTypeMismatch && (
-                    <li className="text-red-600 font-medium">• The vehicle type does not match the pass type</li>
-                  )}
-                </ul>
-                <summary className="block mt-3">
-                  <span className="block font-semibold text-blue-700 mb-1">Parking Rates:</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {/* --- Parking Rates Section: visually in a single grid row --- */}
+                <div className="mt-6">
+                  <span className="block font-semibold text-blue-700 mb-2">Parking Rates:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                     {pricingDetails.map(detail => (
-                      <div key={detail.type}>
+                      <div key={detail.type} className="bg-gray-50 rounded-lg p-2 border border-blue-100">
                         <div className="font-medium text-gray-900">{detail.type}</div>
                         <ul className="pl-4 list-disc space-y-0.5">
                           {detail.rates.map(rate => (
@@ -343,7 +328,8 @@ const VehicleEntry = ({
                       </div>
                     ))}
                   </div>
-                </summary>
+                </div>
+                {/* --- End Parking Rates Section --- */}
               </div>
 
               <Button
