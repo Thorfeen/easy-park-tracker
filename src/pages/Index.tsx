@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, isSameDay as dateFnsIsSameDay, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -264,6 +264,7 @@ const Index = () => {
   const threeWheelerEntriesCount = parkingRecords.filter(record => record.vehicleType === "three-wheeler").length;
   const fourWheelerEntriesCount = parkingRecords.filter(record => record.vehicleType === "four-wheeler").length;
 
+  // Helper: get date string
   const getDateString = (date: Date) => {
     return format(date, "yyyy-MM-dd");
   };
@@ -271,53 +272,86 @@ const Index = () => {
     return getDateString(a) === getDateString(b);
   };
 
-  // --- Revenue Calculations ---
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
+  // Helper: Compute pass sales for a specific date using created_at
+  function getPassSalesForDate(passes, date: Date) {
+    return passes
+      .filter(
+        pass =>
+          pass.created_at &&
+          isSameDay(new Date(pass.created_at), date) &&
+          !isNaN(Number(pass.amount))
+      )
+      .reduce((sum, pass) => sum + Number(pass.amount || 0), 0);
+  }
 
-  function getRevenueForDate(records: ParkingRecord[], date: Date) {
+  // Helper: Compute pass sales for a period (inclusive, using created_at)
+  function getPassSalesForPeriod(passes, start: Date, end: Date) {
+    return passes
+      .filter(pass => {
+        if (!pass.created_at) return false;
+        const createdDate = new Date(pass.created_at);
+        return isWithinInterval(createdDate, { start: startOfDay(start), end: endOfDay(end) }) && !isNaN(Number(pass.amount));
+      })
+      .reduce((sum, pass) => sum + Number(pass.amount || 0), 0);
+  }
+
+  // Compose: Revenue for parking (completed, no pass), for date
+  function getParkingRevenueForDate(records, date: Date) {
     const dateStr = getDateString(date);
     return records
       .filter(r => r.status === "completed" && r.exitTime && getDateString(r.exitTime) === dateStr && !r.isPassHolder)
       .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
   }
-  function getRevenueForPeriod(records: ParkingRecord[], start: Date, end: Date) {
+  // Compose: Revenue for parking (completed, no pass), for period
+  function getParkingRevenueForPeriod(records, start: Date, end: Date) {
     return records
-      .filter(r => r.status === "completed" && r.exitTime && r.exitTime >= start && r.exitTime <= end && !r.isPassHolder)
+      .filter(r =>
+        r.status === "completed" &&
+        r.exitTime &&
+        r.exitTime >= start &&
+        r.exitTime <= end &&
+        !r.isPassHolder
+      )
       .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
   }
 
-  const [selectedRevenueDate, setSelectedRevenueDate] = useState<Date>(today);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  // Updated composable functions
+  function getRevenueForDate(records, passes, date) {
+    return getParkingRevenueForDate(records, date) + getPassSalesForDate(passes, date);
+  }
+  function getRevenueForPeriod(records, passes, start, end) {
+    return getParkingRevenueForPeriod(records, start, end) + getPassSalesForPeriod(passes, start, end);
+  }
 
-  // Today's Revenue
-  const todaysRevenue = getRevenueForDate(parkingRecords, today);
+  // Dates
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
 
-  // Yesterday's Revenue
-  const yesterdaysRevenue = getRevenueForDate(parkingRecords, yesterday);
-
-  // Last 7 Days Revenue (including today) -- period is 6 days before now to end of today
+  // 7 days window
   const start7Days = new Date(today);
   start7Days.setDate(today.getDate() - 6);
   start7Days.setHours(0, 0, 0, 0);
   const endOfToday = new Date(today);
   endOfToday.setHours(23, 59, 59, 999);
-  const last7DaysRevenue = getRevenueForPeriod(parkingRecords, start7Days, endOfToday);
 
-  // Current Month Revenue
+  // This month window
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-  const monthlyRevenue = getRevenueForPeriod(parkingRecords, firstDayOfMonth, lastDayOfMonth);
 
-  // Monthly Pass Sales for current month
-  const monthlyPassSales = monthlyPasses.filter(pass =>
-    pass.startDate >= firstDayOfMonth && pass.startDate <= lastDayOfMonth
-  ).reduce((sum, pass) => sum + (pass.amount || 0), 0);
+  // --- Get revenue (parking+pass sales) ---
+  const [selectedRevenueDate, setSelectedRevenueDate] = useState<Date>(today);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Revenue for selected date
-  const selectedDateRevenue = getRevenueForDate(parkingRecords, selectedRevenueDate);
+  const todaysRevenue = getRevenueForDate(parkingRecords, monthlyPasses, today);
+  const yesterdaysRevenue = getRevenueForDate(parkingRecords, monthlyPasses, yesterday);
+  const last7DaysRevenue = getRevenueForPeriod(parkingRecords, monthlyPasses, start7Days, endOfToday);
+  const monthlyRevenue = getRevenueForPeriod(parkingRecords, monthlyPasses, firstDayOfMonth, lastDayOfMonth);
+  const selectedDateRevenue = getRevenueForDate(parkingRecords, monthlyPasses, selectedRevenueDate);
   const isRevenueToday = isSameDay(selectedRevenueDate, today);
+
+  // Monthly Pass Sales for current month (just pass sales for display row)
+  const monthlyPassSales = getPassSalesForPeriod(monthlyPasses, firstDayOfMonth, lastDayOfMonth);
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -505,8 +539,8 @@ const Index = () => {
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">
                       {isRevenueToday
-                        ? "From completed exits today"
-                        : `Completed exits on ${format(selectedRevenueDate, "MMM dd, yyyy")}`}
+                        ? "Parking fees + pass sales collected today"
+                        : `Total revenue (parking + pass sales) on ${format(selectedRevenueDate, "MMM dd, yyyy")}`}
                     </p>
                     <div className="space-y-1 mt-1 text-xs">
                       <div className="flex items-center justify-between">
