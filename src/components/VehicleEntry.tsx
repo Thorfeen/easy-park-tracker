@@ -249,10 +249,11 @@ const VehicleEntry = ({
                 />
               </div>
 
+              {/* Updated Vehicle Type & Helmet Section */}
               <div className="space-y-4">
-                {/* Vehicle Type heading */}
-                <span className="block font-semibold text-blue-700 mb-2">Vehicle Type:</span>
-                <div className="flex flex-row flex-wrap gap-6 items-stretch">
+                <div className="flex flex-row items-center gap-6 mb-2">
+                  {/* Vehicle Type heading */}
+                  <span className="font-semibold text-blue-700 whitespace-nowrap mr-2">Vehicle Type:</span>
                   {/* Vehicle types */}
                   <VehicleTypeSelector value={vehicleType} onChange={handleVehicleTypeChange} />
                   {/* Helmet checkbox card */}
