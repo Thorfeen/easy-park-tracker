@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,24 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import VehicleEntry from "@/components/VehicleEntry";
 import VehicleExit from "@/components/VehicleExit";
 import ParkingRecords from "@/components/ParkingRecords";
-import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike } from "lucide-react";
+import MonthlyPassManagement from "@/components/MonthlyPassManagement";
+import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard } from "lucide-react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import RevenueCard from "@/components/RevenueCard";
-
-export interface ParkingRecord {
-  id: string;
-  vehicleNumber: string;
-  vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler';
-  entryTime: Date;
-  exitTime?: Date;
-  duration?: number;
-  amountDue?: number;
-  status: 'active' | 'completed';
-}
+import { ParkingRecord, MonthlyPass } from "@/types/parking";
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
   const [parkingRecords, setParkingRecords] = useState<ParkingRecord[]>([]);
+  const [monthlyPasses, setMonthlyPasses] = useState<MonthlyPass[]>([]);
   const isMobile = useMobileDetection();
 
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
@@ -31,14 +24,29 @@ const Index = () => {
   const activeFourWheelers = activeVehicles.filter(record => record.vehicleType === 'four-wheeler');
   const completedRecords = parkingRecords.filter(record => record.status === 'completed');
   const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
+  const activePasses = monthlyPasses.filter(pass => pass.status === 'active' && pass.endDate > new Date());
+  const passHolderVehicles = activeVehicles.filter(record => record.isPassHolder);
+
+  const findActivePass = (vehicleNumber: string): MonthlyPass | null => {
+    return monthlyPasses.find(
+      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() && 
+      pass.status === 'active' && 
+      pass.endDate > new Date()
+    ) || null;
+  };
 
   const addVehicleEntry = (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
+    const upperVehicleNumber = vehicleNumber.toUpperCase();
+    const activePass = findActivePass(upperVehicleNumber);
+    
     const newRecord: ParkingRecord = {
       id: Date.now().toString(),
-      vehicleNumber: vehicleNumber.toUpperCase(),
+      vehicleNumber: upperVehicleNumber,
       vehicleType,
       entryTime: new Date(),
-      status: 'active'
+      status: 'active',
+      isPassHolder: !!activePass,
+      passId: activePass?.id
     };
     setParkingRecords(prev => [...prev, newRecord]);
     console.log('New vehicle entry added:', newRecord);
@@ -56,15 +64,24 @@ const Index = () => {
 
     const exitTime = new Date();
     const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
-    const durationHours = Math.ceil(durationMs / (1000 * 60 * 60)); // Round up to next hour
+    const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
     
-    // New pricing structure: ₹24 for first 6 hours, then ₹10 for each additional hour
-    let amountDue;
-    if (durationHours <= 6) {
-      amountDue = 24; // ₹24 for up to 6 hours
+    let amountDue = 0;
+    
+    // Check if vehicle has active pass
+    const activePass = findActivePass(upperVehicleNumber);
+    
+    if (activePass && activePass.endDate > new Date()) {
+      // Pass holder - no charges
+      amountDue = 0;
     } else {
-      const extraHours = durationHours - 6;
-      amountDue = 24 + (extraHours * 10); // ₹24 + ₹10 per extra hour
+      // Regular pricing for non-pass holders or expired passes
+      if (durationHours <= 6) {
+        amountDue = 24;
+      } else {
+        const extraHours = durationHours - 6;
+        amountDue = 24 + (extraHours * 10);
+      }
     }
 
     const updatedRecord = {
@@ -72,7 +89,9 @@ const Index = () => {
       exitTime,
       duration: durationHours,
       amountDue,
-      status: 'completed' as const
+      status: 'completed' as const,
+      isPassHolder: !!activePass,
+      passId: activePass?.id
     };
 
     setParkingRecords(prev =>
@@ -85,14 +104,25 @@ const Index = () => {
     return updatedRecord;
   };
 
+  const addMonthlyPass = (passData: Omit<MonthlyPass, 'id'>) => {
+    const newPass: MonthlyPass = {
+      ...passData,
+      id: Date.now().toString()
+    };
+    setMonthlyPasses(prev => [...prev, newPass]);
+    console.log('New monthly pass created:', newPass);
+  };
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'entry':
-        return <VehicleEntry onAddEntry={addVehicleEntry} onBack={() => setCurrentView('dashboard')} />;
+        return <VehicleEntry onAddEntry={addVehicleEntry} onBack={() => setCurrentView('dashboard')} findActivePass={findActivePass} />;
       case 'exit':
-        return <VehicleExit onProcessExit={processVehicleExit} onBack={() => setCurrentView('dashboard')} />;
+        return <VehicleExit onProcessExit={processVehicleExit} onBack={() => setCurrentView('dashboard')} findActivePass={findActivePass} />;
       case 'records':
-        return <ParkingRecords records={parkingRecords} onBack={() => setCurrentView('dashboard')} />;
+        return <ParkingRecords records={parkingRecords} passes={monthlyPasses} onBack={() => setCurrentView('dashboard')} />;
+      case 'passes':
+        return <MonthlyPassManagement passes={monthlyPasses} onAddPass={addMonthlyPass} onBack={() => setCurrentView('dashboard')} />;
       default:
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -103,7 +133,7 @@ const Index = () => {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Active Vehicles</CardTitle>
@@ -139,6 +169,26 @@ const Index = () => {
 
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Monthly Passes</CardTitle>
+                    <CreditCard className="h-4 w-4 text-purple-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-600">{activePasses.length}</div>
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Pass Holders Parked</span>
+                        <span className="font-medium">{passHolderVehicles.length}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Total Passes</span>
+                        <span className="font-medium">{monthlyPasses.length}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Records</CardTitle>
                     <History className="h-4 w-4 text-green-600" />
                   </CardHeader>
@@ -152,7 +202,7 @@ const Index = () => {
               </div>
 
               {/* Action Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('entry')}>
                   <CardHeader className="text-center">
@@ -186,11 +236,27 @@ const Index = () => {
                 </Card>
 
                 <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
+                      onClick={() => setCurrentView('passes')}>
+                  <CardHeader className="text-center">
+                    <CreditCard className="h-12 w-12 mx-auto mb-4" />
+                    <CardTitle className="text-xl">Monthly Passes</CardTitle>
+                    <CardDescription className="text-purple-100">
+                      Manage monthly passes
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Button variant="secondary" className="w-full">
+                      Manage Passes
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('records')}>
                   <CardHeader className="text-center">
                     <History className="h-12 w-12 mx-auto mb-4" />
                     <CardTitle className="text-xl">View Records</CardTitle>
-                    <CardDescription className="text-purple-100">
+                    <CardDescription className="text-orange-100">
                       Check parking history
                     </CardDescription>
                   </CardHeader>
@@ -228,7 +294,12 @@ const Index = () => {
                                     {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
-                                <Badge variant="secondary" className="text-xs">Active</Badge>
+                                <div className="flex flex-col gap-1">
+                                  <Badge variant="secondary" className="text-xs">Active</Badge>
+                                  {record.isPassHolder && (
+                                    <Badge variant="default" className="text-xs bg-purple-600">Pass</Badge>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -250,7 +321,12 @@ const Index = () => {
                                     {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
-                                <Badge variant="secondary" className="text-xs">Active</Badge>
+                                <div className="flex flex-col gap-1">
+                                  <Badge variant="secondary" className="text-xs">Active</Badge>
+                                  {record.isPassHolder && (
+                                    <Badge variant="default" className="text-xs bg-purple-600">Pass</Badge>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -272,7 +348,12 @@ const Index = () => {
                                     {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
-                                <Badge variant="secondary" className="text-xs">Active</Badge>
+                                <div className="flex flex-col gap-1">
+                                  <Badge variant="secondary" className="text-xs">Active</Badge>
+                                  {record.isPassHolder && (
+                                    <Badge variant="default" className="text-xs bg-purple-600">Pass</Badge>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>

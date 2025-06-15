@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, Car, Clock, ScanLine, Bike, Truck } from "lucide-react";
+import { ArrowLeft, Car, Clock, ScanLine, Bike, Truck, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import VehicleScanner from "./VehicleScanner";
@@ -13,13 +12,15 @@ import VehicleScanner from "./VehicleScanner";
 interface VehicleEntryProps {
   onAddEntry: (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
   onBack: () => void;
+  findActivePass: (vehicleNumber: string) => any | null;
 }
 
-const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
+const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleType, setVehicleType] = useState<'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const { toast } = useToast();
   const isMobile = useMobileDetection();
 
@@ -65,9 +66,25 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
     }
   };
 
-  const handleScanResult = (scannedNumber: string) => {
+  const checkForPass = (vehicleNumber: string) => {
+    if (vehicleNumber.trim().length >= 3) {
+      const pass = findActivePass(vehicleNumber);
+      setDetectedPass(pass);
+    } else {
+      setDetectedPass(null);
+    }
+  };
+
+  const handleVehicleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setVehicleNumber(value);
+    checkForPass(value);
+  };
+
+  const handleScanResultWithPassCheck = (scannedNumber: string) => {
     setVehicleNumber(scannedNumber);
     setShowScanner(false);
+    checkForPass(scannedNumber);
     toast({
       title: "Scan Complete!",
       description: `Vehicle number ${scannedNumber} detected`,
@@ -81,7 +98,7 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
   if (showScanner) {
     return (
       <VehicleScanner
-        onScanResult={handleScanResult}
+        onScanResult={handleScanResultWithPassCheck}
         onBack={() => setShowScanner(false)}
         title="Scan Vehicle Entry"
         description="Scan license plate for new vehicle arrival"
@@ -144,6 +161,21 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
               </div>
             </div>
 
+            {detectedPass && (
+              <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-2 text-purple-700 mb-2">
+                  <CreditCard className="h-5 w-5" />
+                  <span className="font-semibold">Monthly Pass Detected!</span>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <p><strong>Owner:</strong> {detectedPass.ownerName}</p>
+                  <p><strong>Pass Type:</strong> {detectedPass.passType.toUpperCase()}</p>
+                  <p><strong>Valid Until:</strong> {detectedPass.endDate.toLocaleDateString()}</p>
+                  <p className="text-green-600 font-medium">✓ Free parking for pass holders</p>
+                </div>
+              </div>
+            )}
+
             {isMobile && (
               <div className="mb-6">
                 <Button
@@ -178,7 +210,7 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
                     id="vehicleNumber"
                     type="text"
                     value={vehicleNumber}
-                    onChange={(e) => setVehicleNumber(e.target.value)}
+                    onChange={handleVehicleNumberChange}
                     placeholder="Enter vehicle number (e.g., ABC-1234)"
                     className="text-lg py-3 px-4 flex-1"
                     disabled={isSubmitting}
@@ -231,7 +263,11 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
                 <ul className="space-y-1 text-sm text-gray-600">
                   <li>• Entry time will be automatically recorded</li>
                   <li>• Vehicle will be marked as active in the system</li>
-                  <li>• Parking charges: $10 per hour (minimum 1 hour)</li>
+                  {detectedPass ? (
+                    <li className="text-green-600 font-medium">• Free parking for monthly pass holders</li>
+                  ) : (
+                    <li>• Parking charges: ₹24 for first 6 hours, then ₹10 per hour</li>
+                  )}
                 </ul>
               </div>
 
