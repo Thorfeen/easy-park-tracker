@@ -204,7 +204,6 @@ const Index = () => {
               toastCallback?: (args: { title: string; description: string; variant?: string }) => void
             ) => addVehicleEntry(vehicleNumber, vehicleType, helmet, toastCallback)}
             onBack={() => setCurrentView('dashboard')}
-            // Now only matches pass if BOTH number and type match
             findActivePass={findActivePass}
             onUpdatePassLastUsedAt={updatePassLastUsedAt}
             findActiveVehicle={findActiveVehicle}
@@ -328,10 +327,11 @@ const Index = () => {
 
               {/* Action Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                {/* VEHICLE ENTRY */}
                 <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('entry')}>
                   <CardHeader className="text-center">
-                    {isMobile ? <ScanLine className="h-12 w-12 mx-auto mb-4" /> : <Car className="h-12 w-12 mx-auto mb-4" />}
+                    <Car className="h-12 w-12 mx-auto mb-4" />
                     <CardTitle className="text-xl">Vehicle Entry</CardTitle>
                     <CardDescription className="text-blue-100">
                       Register new vehicle arrival
@@ -339,15 +339,15 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="text-center">
                     <Button variant="secondary" className="w-full">
-                      {isMobile ? "Scan New Entry" : "Add New Entry"}
+                      Add New Entry
                     </Button>
                   </CardContent>
                 </Card>
-
+                {/* VEHICLE EXIT */}
                 <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('exit')}>
                   <CardHeader className="text-center">
-                    {isMobile ? <ScanLine className="h-12 w-12 mx-auto mb-4" /> : <Clock className="h-12 w-12 mx-auto mb-4" />}
+                    <Clock className="h-12 w-12 mx-auto mb-4" />
                     <CardTitle className="text-xl">Vehicle Exit</CardTitle>
                     <CardDescription className="text-green-100">
                       Process vehicle departure
@@ -355,11 +355,11 @@ const Index = () => {
                   </CardHeader>
                   <CardContent className="text-center">
                     <Button variant="secondary" className="w-full">
-                      {isMobile ? "Scan Process Exit" : "Process Exit"}
+                      Process Exit
                     </Button>
                   </CardContent>
                 </Card>
-
+                {/* MONTHLY PASSES */}
                 <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('passes')}>
                   <CardHeader className="text-center">
@@ -375,7 +375,7 @@ const Index = () => {
                     </Button>
                   </CardContent>
                 </Card>
-
+                {/* VIEW RECORDS */}
                 <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('records')}>
                   <CardHeader className="text-center">
