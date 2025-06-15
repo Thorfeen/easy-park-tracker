@@ -43,17 +43,66 @@ const Index = () => {
     );
   };
 
-  const findActivePass = (vehicleNumber: string): MonthlyPass | null => {
+  // DUPLICATE CHECK: Returns the active record if a duplicate is found, else null
+  const findActiveVehicle = (vehicleNumber: string): ParkingRecord | null =>
+    parkingRecords.find(
+      record =>
+        record.vehicleNumber === vehicleNumber.toUpperCase() &&
+        record.status === 'active'
+    ) || null;
+
+  // STRICT PASS VALIDATION: Returns the pass only if both vehicle number & type are matched
+  const findActivePass = (vehicleNumber: string, vehicleType?: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'): MonthlyPass | null => {
+    const upperVehicleNumber = vehicleNumber.toUpperCase();
+    if (vehicleType) {
+      return monthlyPasses.find(
+        pass =>
+          pass.vehicleNumber === upperVehicleNumber &&
+          pass.vehicleType === vehicleType &&
+          pass.status === 'active' &&
+          pass.endDate > new Date()
+      ) || null;
+    }
+    // fallback for legacy usage
     return monthlyPasses.find(
-      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() &&
+      pass =>
+        pass.vehicleNumber === upperVehicleNumber &&
         pass.status === 'active' &&
         pass.endDate > new Date()
     ) || null;
   };
 
-  const addVehicleEntry = (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
+  // Make sure addVehicleEntry accepts cycles and enforces both duplicate and pass validations
+  const addVehicleEntry = (
+    vehicleNumber: string,
+    vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    showToast?: (args: { title: string, description: string, variant?: string }) => void
+  ) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
-    const activePass = findActivePass(upperVehicleNumber);
+
+    // DUPLICATE CHECK
+    if (findActiveVehicle(upperVehicleNumber)) {
+      showToast?.({
+        title: "Error",
+        description: `Vehicle ${upperVehicleNumber} is already inside the parking lot.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // STRICT PASS CHECK
+    const matchedPass = findActivePass(upperVehicleNumber, vehicleType);
+    const anyPass = findActivePass(upperVehicleNumber);
+
+    if (anyPass && (!matchedPass || anyPass.vehicleType !== vehicleType)) {
+      // Pass exists for this number but not for the selected type.
+      showToast?.({
+        title: "Pass Type Mismatch",
+        description: `The active pass for ${upperVehicleNumber} is for ${anyPass.vehicleType.toUpperCase()}. Please select the correct vehicle type.`,
+        variant: "destructive",
+      });
+      return false;
+    }
 
     const newRecord: ParkingRecord = {
       id: Date.now().toString(),
@@ -61,11 +110,12 @@ const Index = () => {
       vehicleType,
       entryTime: new Date(),
       status: 'active',
-      isPassHolder: !!activePass,
-      passId: activePass?.id
+      isPassHolder: !!matchedPass,
+      passId: matchedPass?.id,
     };
     setParkingRecords(prev => [...prev, newRecord]);
     console.log('New vehicle entry added:', newRecord);
+    return true;
   };
 
   const processVehicleExit = (vehicleNumber: string) => {
@@ -134,10 +184,16 @@ const Index = () => {
       case 'entry':
         return (
           <VehicleEntry
-            onAddEntry={addVehicleEntry}
+            onAddEntry={(
+              vehicleNumber: string,
+              vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+              toastCallback?: (args: { title: string, description: string, variant?: string }) => void
+            ) => addVehicleEntry(vehicleNumber, vehicleType, toastCallback)}
             onBack={() => setCurrentView('dashboard')}
+            // Now only matches pass if BOTH number and type match
             findActivePass={findActivePass}
             onUpdatePassLastUsedAt={updatePassLastUsedAt}
+            findActiveVehicle={findActiveVehicle}
           />
         );
       case 'exit':

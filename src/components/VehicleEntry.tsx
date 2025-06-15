@@ -8,18 +8,27 @@ import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface VehicleEntryProps {
-  onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
+  onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
   onBack: () => void;
-  findActivePass: (vehicleNumber: string) => any | null;
+  findActivePass: (vehicleNumber: string, vehicleType?: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => any | null;
   onUpdatePassLastUsedAt: (passId: string) => void;
+  findActiveVehicle: (vehicleNumber: string) => any | null;
 }
 
-const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsedAt }: VehicleEntryProps) => {
+const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsedAt, findActiveVehicle }: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleType, setVehicleType] = useState<'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
+  const [passTypeMismatch, setPassTypeMismatch] = useState(false);
   const { toast } = useToast();
+
+  const resetState = () => {
+    setVehicleNumber("");
+    setVehicleType('two-wheeler');
+    setDetectedPass(null);
+    setPassTypeMismatch(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,74 +53,58 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
 
     setIsSubmitting(true);
 
-    try {
-      onAddEntry(vehicleNumber, vehicleType);
+    // Pass the toast callback in onAddEntry for granular error feedback
+    const result = onAddEntry(vehicleNumber, vehicleType, toast);
 
-      // If a pass was detected and used, update its lastUsedAt
-      if (detectedPass && detectedPass.id) {
-        onUpdatePassLastUsedAt(detectedPass.id);
-      }
-
-      toast({
-        title: "Success!",
-        description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
-      });
-      setVehicleNumber("");
-      setVehicleType('two-wheeler');
-      setDetectedPass(null); // Clear detected pass after successful entry
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to register vehicle. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
+    if (result === false) {
       setIsSubmitting(false);
+      return;
     }
+
+    // If a pass was detected and used, update its lastUsedAt
+    if (detectedPass && detectedPass.id) {
+      onUpdatePassLastUsedAt(detectedPass.id);
+    }
+
+    toast({
+      title: "Success!",
+      description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
+    });
+    resetState();
+    setIsSubmitting(false);
   };
 
-  const checkForPass = (vehicleNumber: string) => {
+  // Enhanced pass detection: Also sets type mismatch flag
+  const checkForPass = (vehicleNumber: string, vehicleType: typeof vehicleTypes[number]["value"]) => {
     if (vehicleNumber.trim().length >= 3) {
-      const pass = findActivePass(vehicleNumber);
-      setDetectedPass(pass);
+      const pass = findActivePass(vehicleNumber, vehicleType);
+      const anyPass = findActivePass(vehicleNumber);
+
+      setDetectedPass(pass || anyPass || null);
+      setPassTypeMismatch(!!(anyPass && (!pass || anyPass.vehicleType !== vehicleType)));
     } else {
       setDetectedPass(null);
+      setPassTypeMismatch(false);
     }
   };
 
   const handleVehicleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setVehicleNumber(value);
-    checkForPass(value);
+    checkForPass(value, vehicleType);
+  };
+
+  const handleVehicleTypeChange = (value: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
+    setVehicleType(value);
+    checkForPass(vehicleNumber, value);
   };
 
   const currentTime = new Date().toLocaleString();
-
   const vehicleTypes = [
-    {
-      value: 'cycle' as const,
-      label: 'Cycle',
-      icon: Bike,
-      description: 'Bicycle only'
-    },
-    {
-      value: 'two-wheeler' as const,
-      label: 'Two Wheeler',
-      icon: Bike,
-      description: 'Motorcycles, Scooters'
-    },
-    {
-      value: 'three-wheeler' as const,
-      label: 'Three Wheeler',
-      icon: Car,
-      description: 'Auto-rickshaws, Three-wheeled vehicles'
-    },
-    {
-      value: 'four-wheeler' as const,
-      label: 'Four Wheeler',
-      icon: Truck,
-      description: 'Cars, SUVs, Trucks'
-    }
+    { value: 'cycle' as const, label: 'Cycle', icon: Bike, description: 'Bicycle only' },
+    { value: 'two-wheeler' as const, label: 'Two Wheeler', icon: Bike, description: 'Motorcycles, Scooters' },
+    { value: 'three-wheeler' as const, label: 'Three Wheeler', icon: Car, description: 'Auto-rickshaws, Three-wheeled vehicles' },
+    { value: 'four-wheeler' as const, label: 'Four Wheeler', icon: Truck, description: 'Cars, SUVs, Trucks' }
   ];
 
   return (
@@ -136,7 +129,6 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
               Register a new vehicle arrival
             </CardDescription>
           </CardHeader>
-          
           <CardContent className="p-8">
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center gap-2 text-blue-700">
@@ -146,17 +138,29 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
               </div>
             </div>
 
-            {detectedPass && (
-              <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center gap-2 text-purple-700 mb-2">
+            {(detectedPass || passTypeMismatch) && (
+              <div className={`mb-6 p-4 rounded-lg border ${passTypeMismatch ? "bg-red-50 border-red-200" : "bg-purple-50 border-purple-200"}`}>
+                <div className={`flex items-center gap-2 mb-2 ${passTypeMismatch ? "text-red-700" : "text-purple-700"}`}>
                   <CreditCard className="h-5 w-5" />
-                  <span className="font-semibold">Monthly Pass Detected!</span>
+                  <span className="font-semibold">
+                    {passTypeMismatch ? "Pass Type Mismatch!" : "Monthly Pass Detected!"}
+                  </span>
                 </div>
                 <div className="space-y-1 text-sm">
-                  <p><strong>Owner:</strong> {detectedPass.ownerName}</p>
-                  <p><strong>Pass Type:</strong> {detectedPass.passType.toUpperCase()}</p>
-                  <p><strong>Valid Until:</strong> {detectedPass.endDate.toLocaleDateString()}</p>
-                  <p className="text-green-600 font-medium">✓ Free parking for pass holders</p>
+                  {detectedPass && (
+                    <>
+                      <p><strong>Owner:</strong> {detectedPass.ownerName}</p>
+                      <p><strong>Pass Type:</strong> {detectedPass.passType?.toUpperCase?.()}</p>
+                      <p><strong>Valid Until:</strong> {detectedPass.endDate ? new Date(detectedPass.endDate).toLocaleDateString() : ""}</p>
+                    </>
+                  )}
+                  {passTypeMismatch ? (
+                    <p className="text-red-600 font-medium">
+                      Vehicle type does not match the active pass category. Please select: <b>{detectedPass?.passType?.toUpperCase?.() ?? "the correct type"}</b>
+                    </p>
+                  ) : detectedPass ? (
+                    <p className="text-green-600 font-medium">✓ Free parking for pass holders</p>
+                  ) : null}
                 </div>
               </div>
             )}
@@ -184,7 +188,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
                 <Label className="text-base font-semibold">Vehicle Type *</Label>
                 <RadioGroup
                   value={vehicleType}
-                  onValueChange={(value) => setVehicleType(value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
+                  onValueChange={handleVehicleTypeChange}
                   className="flex flex-row gap-6 flex-wrap"
                 >
                   {vehicleTypes.map((type) => {
@@ -216,10 +220,13 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
                 <ul className="space-y-1 text-sm text-gray-600">
                   <li>• Entry time will be automatically recorded</li>
                   <li>• Vehicle will be marked as active in the system</li>
-                  {detectedPass ? (
+                  {detectedPass && !passTypeMismatch ? (
                     <li className="text-green-600 font-medium">• Free parking for monthly pass holders</li>
                   ) : (
                     <li>• Parking charges: ₹24 for first 6 hours, then ₹10 per hour</li>
+                  )}
+                  {passTypeMismatch && (
+                    <li className="text-red-600 font-medium">• The vehicle type does not match the pass type</li>
                   )}
                 </ul>
               </div>
