@@ -62,13 +62,16 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4'); // Set to A4 format
     const exportRecords = getExportFilteredRecords();
     
     // Modern color scheme - properly typed as tuples
     const primaryColor: [number, number, number] = [79, 70, 229]; // Indigo
     const secondaryColor: [number, number, number] = [236, 236, 241]; // Light gray
     const accentColor: [number, number, number] = [99, 102, 241]; // Lighter indigo
+    
+    // Set consistent font for entire document
+    doc.setFont('helvetica', 'normal');
     
     // Header with rounded background
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -80,8 +83,9 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     doc.setFontSize(18);
     doc.text('Railway Parking Management - Records', 105, 25, { align: 'center' });
     
-    // Reset text color
+    // Reset text color and font
     doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
     
     let yPosition = 45;
     
@@ -182,7 +186,8 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         fillColor: primaryColor,
         textColor: [255, 255, 255] as [number, number, number],
         fontStyle: 'bold',
-        fontSize: 10
+        fontSize: 10,
+        font: 'helvetica'
       },
       alternateRowStyles: {
         fillColor: [249, 250, 251] as [number, number, number]
