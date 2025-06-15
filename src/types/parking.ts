@@ -1,8 +1,9 @@
+
 export interface MonthlyPass {
   id: string;
   vehicleNumber: string;
-  passType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler';
-  vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler';
+  passType: 'basic' | 'standard' | 'premium';
+  vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler';
   ownerName: string;
   ownerPhone: string;
   startDate: Date;
