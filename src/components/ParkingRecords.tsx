@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { toast } from "@/hooks/use-toast";
 
 interface ParkingRecordsProps {
   records: ParkingRecord[];
@@ -61,106 +62,110 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     });
   };
 
+  // Helper for 12-hour time format with date-fns
+  const formatExportTimestamp = (date: Date) =>
+    format(date, "dd/MM/yyyy h:mm a"); // e.g., 13/06/2025 5:43 PM
+
   const exportToPDF = () => {
-    const doc = new jsPDF('p', 'mm', 'a4'); // Set to A4 format
     const exportRecords = getExportFilteredRecords();
-    
-    // Modern color scheme - properly typed as tuples
+    if (exportRecords.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "Please ensure there are parking records in the selected range before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const doc = new jsPDF('p', 'mm', 'a4'); // Set to A4 format
     const primaryColor: [number, number, number] = [79, 70, 229]; // Indigo
     const secondaryColor: [number, number, number] = [236, 236, 241]; // Light gray
     const accentColor: [number, number, number] = [99, 102, 241]; // Lighter indigo
-    
-    // Set consistent font for entire document
-    doc.setFont('helvetica', 'normal');
-    
-    // Header with rounded background
+
+    // Header with rounded background and title
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.roundedRect(10, 10, 190, 25, 3, 3, 'F');
-    
-    // Title with consistent font
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.text('Railway Parking Management - Records', 105, 25, { align: 'center' });
-    
-    // Reset text color and font
-    doc.setTextColor(0, 0, 0);
+
+    // Generated date/time at the top right (in 12-hour format)
     doc.setFont('helvetica', 'normal');
-    
+    doc.setFontSize(10);
+    doc.setTextColor(230, 230, 230);
+    doc.text(
+      `Generated: ${formatExportTimestamp(new Date())}`,
+      198,
+      16,
+      { align: 'right' }
+    );
+
+    // Date range below header
     let yPosition = 45;
-    
-    // Date range section with modern styling
     if (exportDateFrom || exportDateTo) {
       doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
       doc.roundedRect(10, yPosition - 5, 190, 15, 2, 2, 'F');
-      
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(11);
       let dateText = 'Date Range: ';
       if (exportDateFrom) dateText += `From ${format(exportDateFrom, 'dd/MM/yyyy')} `;
       if (exportDateTo) dateText += `To ${format(exportDateTo, 'dd/MM/yyyy')}`;
+      doc.setTextColor(40, 40, 40);
       doc.text(dateText, 15, yPosition + 3);
       yPosition += 25;
     }
-    
-    // Summary section with modern cards layout
+
+    // Summary cards in a grid (no "Summary" heading)
     const completedRecords = exportRecords.filter(r => r.status === 'completed');
     const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
-    
-    // Summary title
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('Summary', 15, yPosition);
-    yPosition += 10;
-    
-    // Summary cards in a grid
     const cardWidth = 45;
     const cardHeight = 20;
     const spacing = 2;
-    
+
     // Card 1: Total Records
     doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-    doc.roundedRect(10, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    doc.roundedRect(10, yPosition, cardWidth, cardHeight, 5, 5, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Total Records', 12, yPosition + 6);
     doc.setFontSize(16);
     doc.text(exportRecords.length.toString(), 12, yPosition + 15);
-    
+
     // Card 2: Active Vehicles
     doc.setFillColor(34, 197, 94); // Green
-    doc.roundedRect(10 + cardWidth + spacing, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    doc.roundedRect(10 + cardWidth + spacing, yPosition, cardWidth, cardHeight, 5, 5, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Active Vehicles', 12 + cardWidth + spacing, yPosition + 6);
     doc.setFontSize(16);
     doc.text(exportRecords.filter(r => r.status === 'active').length.toString(), 12 + cardWidth + spacing, yPosition + 15);
-    
+
     // Card 3: Completed
     doc.setFillColor(59, 130, 246); // Blue
-    doc.roundedRect(10 + (cardWidth + spacing) * 2, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    doc.roundedRect(10 + (cardWidth + spacing) * 2, yPosition, cardWidth, cardHeight, 5, 5, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Completed', 12 + (cardWidth + spacing) * 2, yPosition + 6);
     doc.setFontSize(16);
     doc.text(completedRecords.length.toString(), 12 + (cardWidth + spacing) * 2, yPosition + 15);
-    
-    // Card 4: Total Revenue - Fixed font consistency
+
+    // Card 4: Total Revenue
     doc.setFillColor(168, 85, 247); // Purple
-    doc.roundedRect(10 + (cardWidth + spacing) * 3, yPosition, cardWidth, cardHeight, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold'); // Consistent font
+    doc.roundedRect(10 + (cardWidth + spacing) * 3, yPosition, cardWidth, cardHeight, 5, 5, 'F');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.text('Total Revenue', 12 + (cardWidth + spacing) * 3, yPosition + 6);
-    doc.setFontSize(16); // Consistent size
+    doc.setFontSize(16);
     doc.text(`Rs. ${totalRevenue}`, 12 + (cardWidth + spacing) * 3, yPosition + 15);
-    
+
     yPosition += 35;
-    
+
     // Reset text color for table
     doc.setTextColor(0, 0, 0);
-    
-    // Table with modern styling
+
+    // Table with modern, rounded styling
     const tableData = exportRecords.map(record => [
       record.vehicleNumber,
       record.vehicleType,
@@ -172,7 +177,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         : (record.amountDue ? `Rs. ${record.amountDue}` : '-'),
       record.status
     ]);
-    
+
     autoTable(doc, {
       head: [['Vehicle Number', 'Type', 'Entry Time', 'Exit Time', 'Duration', 'Amount', 'Status']],
       body: tableData,
@@ -182,38 +187,60 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         font: 'helvetica',
         cellPadding: 3,
         lineColor: [220, 220, 220] as [number, number, number],
-        lineWidth: 0.5
+        lineWidth: 0.5,
+        fillColor: [255, 255, 255] as [number, number, number],
+        textColor: 30,
+        borderRadius: 5, // this is a custom prop; see below for workaround
+        cellWidth: 'wrap'
       },
       headStyles: { 
         fillColor: primaryColor,
         textColor: [255, 255, 255] as [number, number, number],
         fontStyle: 'bold',
         fontSize: 10,
-        font: 'helvetica'
+        font: 'helvetica',
+        halign: 'center',
+        valign: 'middle',
+        cellPadding: 4,
+        lineWidth: 0.5,
+        lineColor: [180, 180, 255] as [number, number, number],
+        borderRadius: 7, // not native, but triggers workaround
+        cellWidth: 'wrap'
       },
       alternateRowStyles: {
         fillColor: [249, 250, 251] as [number, number, number]
       },
-      tableLineColor: [220, 220, 220] as [number, number, number],
-      tableLineWidth: 0.5,
-      theme: 'grid'
+      tableLineColor: [200, 200, 222] as [number, number, number],
+      tableLineWidth: 0.9,
+      theme: 'grid',
+      didDrawCell: (data) => {
+        // For modern rounded look, draw a rounded rectangle manually behind each cell
+        const { cell, table } = data;
+        if (cell.section === "body" || cell.section === "head") {
+          const { x, y, width, height } = cell;
+          const r = 6; // radius for rounded corners
+          doc.setDrawColor(240, 240, 240);
+          doc.setLineWidth(0.3);
+          doc.setFillColor(cell.section === "head" ? 79 : 255, cell.section === "head" ? 70 : 255, cell.section === "head" ? 229 : 255);
+          // Draw only for body and head for rounded rectangle bg
+          doc.roundedRect(x, y, width, height, r, r, 'FD');
+        }
+      }
     });
-    
-    // Footer with rounded background
-    const finalY = (doc as any).lastAutoTable?.finalY || yPosition + 50;
-    doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.roundedRect(10, finalY + 10, 190, 15, 2, 2, 'F');
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated on ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, finalY + 20, { align: 'center' });
-    
+
     doc.save(`parking-records-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   const exportToExcel = () => {
     const exportRecords = getExportFilteredRecords();
+    if (exportRecords.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "Please ensure there are parking records in the selected range before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const worksheetData = exportRecords.map(record => ({
       'Vehicle Number': record.vehicleNumber,
@@ -226,11 +253,9 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         : (record.amountDue || '-'),
       'Status': record.status
     }));
-    
-    // Add summary at the top
+
     const completedRecords = exportRecords.filter(r => r.status === 'completed');
     const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
-    
     const summaryData = [
       { 'Vehicle Number': 'SUMMARY', 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
       { 'Vehicle Number': `Total Records: ${exportRecords.length}`, 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
@@ -239,7 +264,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       { 'Vehicle Number': `Total Revenue: ₹${totalRevenue}`, 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
       { 'Vehicle Number': '', 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
     ];
-    
+
     const finalData = [...summaryData, ...worksheetData];
     
     const worksheet = XLSX.utils.json_to_sheet(finalData);
