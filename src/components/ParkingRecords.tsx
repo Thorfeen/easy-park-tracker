@@ -65,17 +65,18 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     const doc = new jsPDF('p', 'mm', 'a4'); // Set to A4 format
     const exportRecords = getExportFilteredRecords();
     
-    // Modern color scheme - properly typed as tuples
-    const primaryColor: [number, number, number] = [79, 70, 229]; // Indigo
-    const secondaryColor: [number, number, number] = [236, 236, 241]; // Light gray
-    const accentColor: [number, number, number] = [99, 102, 241]; // Lighter indigo
+    // Minimalistic black and white color scheme
+    const blackColor: [number, number, number] = [0, 0, 0];
+    const whiteColor: [number, number, number] = [255, 255, 255];
+    const lightGrayColor: [number, number, number] = [245, 245, 245];
+    const grayColor: [number, number, number] = [128, 128, 128];
     
     // Set consistent font for entire document
     doc.setFont('helvetica', 'normal');
     
-    // Header with rounded background
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.roundedRect(10, 10, 190, 25, 3, 3, 'F');
+    // Clean header with black background
+    doc.setFillColor(blackColor[0], blackColor[1], blackColor[2]);
+    doc.roundedRect(10, 10, 190, 25, 2, 2, 'F');
     
     // Title with consistent font
     doc.setTextColor(255, 255, 255);
@@ -89,10 +90,10 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     
     let yPosition = 45;
     
-    // Date range section with modern styling
+    // Date range section with minimal styling
     if (exportDateFrom || exportDateTo) {
-      doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-      doc.roundedRect(10, yPosition - 5, 190, 15, 2, 2, 'F');
+      doc.setFillColor(lightGrayColor[0], lightGrayColor[1], lightGrayColor[2]);
+      doc.roundedRect(10, yPosition - 5, 190, 15, 1, 1, 'F');
       
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(11);
@@ -103,7 +104,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       yPosition += 25;
     }
     
-    // Summary section with modern cards layout
+    // Summary section with clean layout
     const completedRecords = exportRecords.filter(r => r.status === 'completed');
     const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
     
@@ -113,54 +114,64 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     doc.text('Summary', 15, yPosition);
     yPosition += 10;
     
-    // Summary cards in a grid
-    const cardWidth = 45;
-    const cardHeight = 20;
-    const spacing = 2;
+    // Clean summary layout in a single row
+    const startX = 15;
+    const spacing = 45;
     
-    // Card 1: Total Records
-    doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-    doc.roundedRect(10, yPosition, cardWidth, cardHeight, 2, 2, 'F');
-    doc.setTextColor(255, 255, 255);
+    // Summary items with consistent formatting
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    
+    // Total Records
+    doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+    doc.text('Total Records', startX, yPosition + 5);
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('Total Records', 12, yPosition + 6);
-    doc.setFontSize(16);
-    doc.text(exportRecords.length.toString(), 12, yPosition + 15);
+    doc.setFontSize(14);
+    doc.text(exportRecords.length.toString(), startX, yPosition + 12);
     
-    // Card 2: Active Vehicles
-    doc.setFillColor(34, 197, 94); // Green
-    doc.roundedRect(10 + cardWidth + spacing, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    // Active Vehicles
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+    doc.text('Active Vehicles', startX + spacing, yPosition + 5);
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('Active Vehicles', 12 + cardWidth + spacing, yPosition + 6);
-    doc.setFontSize(16);
-    doc.text(exportRecords.filter(r => r.status === 'active').length.toString(), 12 + cardWidth + spacing, yPosition + 15);
+    doc.setFontSize(14);
+    doc.text(exportRecords.filter(r => r.status === 'active').length.toString(), startX + spacing, yPosition + 12);
     
-    // Card 3: Completed
-    doc.setFillColor(59, 130, 246); // Blue
-    doc.roundedRect(10 + (cardWidth + spacing) * 2, yPosition, cardWidth, cardHeight, 2, 2, 'F');
+    // Completed
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+    doc.text('Completed', startX + spacing * 2, yPosition + 5);
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('Completed', 12 + (cardWidth + spacing) * 2, yPosition + 6);
-    doc.setFontSize(16);
-    doc.text(completedRecords.length.toString(), 12 + (cardWidth + spacing) * 2, yPosition + 15);
+    doc.setFontSize(14);
+    doc.text(completedRecords.length.toString(), startX + spacing * 2, yPosition + 12);
     
-    // Card 4: Total Revenue - Fixed font consistency
-    doc.setFillColor(168, 85, 247); // Purple
-    doc.roundedRect(10 + (cardWidth + spacing) * 3, yPosition, cardWidth, cardHeight, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold'); // Consistent font
+    // Total Revenue - Fixed font consistency
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text('Total Revenue', 12 + (cardWidth + spacing) * 3, yPosition + 6);
-    doc.setFontSize(16); // Consistent size
-    doc.text(`₹${totalRevenue}`, 12 + (cardWidth + spacing) * 3, yPosition + 15);
+    doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
+    doc.text('Total Revenue', startX + spacing * 3, yPosition + 5);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(`₹${totalRevenue}`, startX + spacing * 3, yPosition + 12);
     
-    yPosition += 35;
+    yPosition += 30;
+    
+    // Add a subtle line separator
+    doc.setDrawColor(grayColor[0], grayColor[1], grayColor[2]);
+    doc.setLineWidth(0.5);
+    doc.line(10, yPosition, 200, yPosition);
+    yPosition += 10;
     
     // Reset text color for table
     doc.setTextColor(0, 0, 0);
     
-    // Table with modern styling
+    // Table with minimalistic styling
     const tableData = exportRecords.map(record => [
       record.vehicleNumber,
       record.vehicleType,
@@ -178,33 +189,34 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       styles: { 
         fontSize: 9,
         font: 'helvetica',
-        cellPadding: 3,
-        lineColor: [220, 220, 220] as [number, number, number],
-        lineWidth: 0.5
+        cellPadding: 4,
+        lineColor: lightGrayColor,
+        lineWidth: 0.5,
+        textColor: blackColor
       },
       headStyles: { 
-        fillColor: primaryColor,
-        textColor: [255, 255, 255] as [number, number, number],
+        fillColor: blackColor,
+        textColor: whiteColor,
         fontStyle: 'bold',
         fontSize: 10,
         font: 'helvetica'
       },
       alternateRowStyles: {
-        fillColor: [249, 250, 251] as [number, number, number]
+        fillColor: lightGrayColor
       },
-      tableLineColor: [220, 220, 220] as [number, number, number],
+      tableLineColor: grayColor,
       tableLineWidth: 0.5,
       theme: 'grid'
     });
     
-    // Footer with rounded background
+    // Clean footer
     const finalY = (doc as any).lastAutoTable?.finalY || yPosition + 50;
-    doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.roundedRect(10, finalY + 10, 190, 15, 2, 2, 'F');
+    doc.setFillColor(lightGrayColor[0], lightGrayColor[1], lightGrayColor[2]);
+    doc.roundedRect(10, finalY + 10, 190, 15, 1, 1, 'F');
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
     doc.text(`Generated on ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, finalY + 20, { align: 'center' });
     
     doc.save(`parking-records-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
