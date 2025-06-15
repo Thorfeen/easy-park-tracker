@@ -7,10 +7,45 @@ import VehicleEntry from "@/components/VehicleEntry";
 import VehicleExit from "@/components/VehicleExit";
 import ParkingRecords from "@/components/ParkingRecords";
 import MonthlyPassManagement from "@/components/MonthlyPassManagement";
-import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard, IndianRupee } from "lucide-react";
+import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard, IndianRupee, Fullscreen } from "lucide-react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
 import { calculateParkingCharges } from "@/utils/parkingCharges";
+
+const FullscreenToggleButton = () => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
+  };
+
+  // Update state if user leaves fullscreen via ESC or other means
+  // (so we update the icon accordingly)
+  // Only adds event listener once
+  if (typeof window !== "undefined") {
+    document.onfullscreenchange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+  }
+
+  return (
+    <button
+      onClick={handleToggleFullscreen}
+      className="absolute top-4 right-16 z-50 p-2 bg-white shadow rounded-full hover:bg-gray-100 transition-colors"
+      title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+      aria-label="Toggle Fullscreen"
+      type="button"
+    >
+      <Fullscreen className="w-6 h-6 text-gray-800" />
+    </button>
+  );
+};
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
@@ -238,8 +273,10 @@ const Index = () => {
       case 'passes':
         return <MonthlyPassManagement passes={monthlyPasses} onAddPass={addMonthlyPass} onBack={() => setCurrentView('dashboard')} />;
       default:
+        // Show the fullscreen toggle only on dashboard view
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+            <FullscreenToggleButton />
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">Railway Parking Management</h1>
