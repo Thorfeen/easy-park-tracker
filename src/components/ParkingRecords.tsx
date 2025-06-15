@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, History, Search, Clock, DollarSign } from "lucide-react";
+import { ArrowLeft, History, Search, Clock, IndianRupee } from "lucide-react";
 import { ParkingRecord } from "@/pages/Index";
 
 interface ParkingRecordsProps {
@@ -89,10 +89,10 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
               
               <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-purple-600" />
+                  <IndianRupee className="h-5 w-5 text-purple-600" />
                   <div>
                     <p className="text-sm text-purple-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-purple-700">${totalRevenue}</p>
+                    <p className="text-2xl font-bold text-purple-700">₹{totalRevenue}</p>
                   </div>
                 </div>
               </div>
@@ -167,7 +167,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                         </TableCell>
                         <TableCell>{formatDuration(record.duration)}</TableCell>
                         <TableCell>
-                          {record.amountDue ? `$${record.amountDue}` : '-'}
+                          {record.amountDue ? `₹${record.amountDue}` : '-'}
                         </TableCell>
                         <TableCell>{getStatusBadge(record.status)}</TableCell>
                       </TableRow>

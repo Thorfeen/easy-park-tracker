@@ -57,7 +57,7 @@ const Index = () => {
     const exitTime = new Date();
     const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60)); // Round up to next hour
-    const hourlyRate = 10; // $10 per hour
+    const hourlyRate = 50; // ₹50 per hour
     const amountDue = durationHours * hourlyRate;
 
     const updatedRecord = {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DollarSign, CalendarIcon } from "lucide-react";
+import { IndianRupee, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ParkingRecord } from "@/pages/Index";
@@ -38,11 +38,11 @@ const RevenueCard = ({ records }: RevenueCardProps) => {
         <CardTitle className="text-sm font-medium">
           {isToday ? "Today's Revenue" : "Revenue"}
         </CardTitle>
-        <DollarSign className="h-4 w-4 text-purple-600" />
+        <IndianRupee className="h-4 w-4 text-purple-600" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-purple-600 mb-2">
-          ${selectedDateRevenue}
+          ₹{selectedDateRevenue}
         </div>
         <div className="flex items-center gap-2">
           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
