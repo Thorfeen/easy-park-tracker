@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, DollarSign, Car, AlertCircle, ScanLine } from "lucide-react";
+import { ArrowLeft, Clock, Car, AlertCircle, ScanLine, IndianRupee } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ParkingRecord } from "@/pages/Index";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
@@ -238,8 +238,8 @@ const VehicleExit = ({ onProcessExit, onBack }: VehicleExitProps) => {
                     <div>
                       <Label className="text-sm text-gray-600">Amount Due</Label>
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <p className="font-bold text-xl text-green-600">${exitRecord.amountDue}</p>
+                        <IndianRupee className="h-4 w-4 text-green-600" />
+                        <p className="font-bold text-xl text-green-600">₹{exitRecord.amountDue}</p>
                       </div>
                     </div>
                   </div>
@@ -247,10 +247,13 @@ const VehicleExit = ({ onProcessExit, onBack }: VehicleExitProps) => {
                   <div className="bg-white p-4 rounded border">
                     <p className="text-sm text-gray-600 mb-2">Calculation:</p>
                     <p className="text-sm">
-                      {formatDuration(exitRecord.duration || 0)} × $10/hour = <strong>${exitRecord.amountDue}</strong>
+                      {(exitRecord.duration || 0) <= 6 
+                        ? `Up to 6 hours = ₹24` 
+                        : `6 hours (₹24) + ${(exitRecord.duration || 0) - 6} extra hours (₹${((exitRecord.duration || 0) - 6) * 10}) = ₹${exitRecord.amountDue}`
+                      }
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      * Minimum charge of 1 hour applies
+                      * ₹24 for first 6 hours, then ₹10 per additional hour
                     </p>
                   </div>
                 </div>
