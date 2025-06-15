@@ -7,7 +7,7 @@ import VehicleEntry from "@/components/VehicleEntry";
 import VehicleExit from "@/components/VehicleExit";
 import ParkingRecords from "@/components/ParkingRecords";
 import MonthlyPassManagement from "@/components/MonthlyPassManagement";
-import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard } from "lucide-react";
+import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard, IndianRupee } from "lucide-react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
 import { calculateParkingCharges } from "@/utils/parkingCharges";
@@ -349,13 +349,14 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
+                {/* UPDATED REVENUE STATS CARD */}
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <IndianRupee className="h-4 w-4 text-orange-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{`₹${totalRevenue}`}</div>
+                    <div className="text-2xl font-bold text-orange-600">{`₹${totalRevenue}`}</div>
                     <div className="space-y-1 mt-2">
                       <div className="flex items-center justify-between text-xs">
                         <span>Parking Charges</span>
