@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import VehicleExit from "@/components/VehicleExit";
 import ParkingRecords from "@/components/ParkingRecords";
 import { Car, Clock, History, DollarSign, ScanLine } from "lucide-react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import RevenueCard from "@/components/RevenueCard";
 
 export interface ParkingRecord {
   id: string;
@@ -114,16 +114,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-purple-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-purple-600">${totalRevenue}</div>
-                    <p className="text-xs text-muted-foreground">From completed exits</p>
-                  </CardContent>
-                </Card>
+                <RevenueCard records={parkingRecords} />
               </div>
 
               {/* Action Cards */}
