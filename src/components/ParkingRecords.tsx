@@ -370,17 +370,27 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                     </Popover>
                   </div>
                   
-                  <Button 
+                  {/* Export PDF Button - Disabled if no date selected */}
+                  <Button
                     onClick={exportToPDF}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    disabled={!exportDateFrom && !exportDateTo}
+                    className={cn(
+                      "bg-red-600 hover:bg-red-700 text-white",
+                      (!exportDateFrom && !exportDateTo) && "opacity-50 cursor-not-allowed"
+                    )}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Export PDF
                   </Button>
                   
-                  <Button 
+                  {/* Export Excel Button - Disabled if no date selected */}
+                  <Button
                     onClick={exportToExcel}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    disabled={!exportDateFrom && !exportDateTo}
+                    className={cn(
+                      "bg-green-600 hover:bg-green-700 text-white",
+                      (!exportDateFrom && !exportDateTo) && "opacity-50 cursor-not-allowed"
+                    )}
                   >
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Export Excel
@@ -407,6 +417,13 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                       Clear date filter
                     </Button>
                   </div>
+                )}
+
+                {/* If neither date filter is selected, show a help message below the export buttons */}
+                {!(exportDateFrom || exportDateTo) && (
+                  <p className="mt-3 text-xs text-red-600">
+                    Please select a date filter (From Date or To Date) to enable export.
+                  </p>
                 )}
               </CardContent>
             </Card>
