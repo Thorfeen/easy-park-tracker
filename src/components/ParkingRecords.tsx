@@ -463,6 +463,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                   <TableHeader>
                     <TableRow className="bg-gray-50">
                       <TableHead className="font-semibold">Vehicle Number</TableHead>
+                      <TableHead className="font-semibold">Vehicle Type</TableHead>
                       <TableHead className="font-semibold">Entry Time</TableHead>
                       <TableHead className="font-semibold">Exit Time</TableHead>
                       <TableHead className="font-semibold">Duration</TableHead>
@@ -474,9 +475,14 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                     {filteredRecords.map((record) => (
                       <TableRow key={record.id} className="hover:bg-gray-50">
                         <TableCell className="font-medium">{record.vehicleNumber}</TableCell>
-                        <TableCell>{record.entryTime.toLocaleString()}</TableCell>
+                        <TableCell className="capitalize">{record.vehicleType.replace('-', ' ')}</TableCell>
                         <TableCell>
-                          {record.exitTime ? record.exitTime.toLocaleString() : '-'}
+                          {format(record.entryTime, 'hh:mm a, dd/MM/yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          {record.exitTime
+                            ? format(record.exitTime, 'hh:mm a, dd/MM/yyyy')
+                            : '-'}
                         </TableCell>
                         <TableCell>{formatDuration(record.duration)}</TableCell>
                         {/* Update the Amount column here */}
