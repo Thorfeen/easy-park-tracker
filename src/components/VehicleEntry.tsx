@@ -244,31 +244,13 @@ const VehicleEntry = ({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="vehicleNumber" className="text-base font-semibold">
-                  Vehicle Number *
-                </Label>
-                <Input
-                  id="vehicleNumber"
-                  type="text"
-                  value={vehicleNumber}
-                  onChange={handleVehicleNumberChange}
-                  placeholder="Enter vehicle number (e.g., ABC-1234)"
-                  className="text-lg py-3 px-4"
-                  disabled={isSubmitting}
-                />
-                <p className="text-sm text-gray-600">
-                  Enter the complete vehicle number including any letters and numbers
-                </p>
-              </div>
-
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Vehicle Type *</Label>
-                <div className="flex flex-row gap-6 flex-wrap">
+                <div className="flex flex-row flex-wrap gap-6 items-stretch">
                   <RadioGroup
                     value={vehicleType}
                     onValueChange={handleVehicleTypeChange}
-                    className="flex flex-row gap-6 flex-wrap"
+                    className="flex flex-row flex-wrap gap-6 items-stretch"
                   >
                     {vehicleTypes.map((type) => {
                       const Icon = type.icon;
@@ -293,7 +275,7 @@ const VehicleEntry = ({
                     })}
                   </RadioGroup>
 
-                  {/* Helmet Card */}
+                  {/* Helmet Card: placed in the same flex row for alignment */}
                   <div
                     role="button"
                     tabIndex={0}
