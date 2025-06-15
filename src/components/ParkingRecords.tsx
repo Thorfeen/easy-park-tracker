@@ -167,7 +167,9 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       record.entryTime.toLocaleString(),
       record.exitTime ? record.exitTime.toLocaleString() : '-',
       record.duration ? `${record.duration} hours` : '-',
-      record.amountDue ? `₹${record.amountDue}` : '-',
+      (record.status === 'completed' && record.isPassHolder)
+        ? "Pass"
+        : (record.amountDue ? `₹${record.amountDue}` : '-'),
       record.status
     ]);
     
@@ -219,7 +221,9 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       'Entry Time': record.entryTime.toLocaleString(),
       'Exit Time': record.exitTime ? record.exitTime.toLocaleString() : '-',
       'Duration (Hours)': record.duration || '-',
-      'Amount (₹)': record.amountDue || '-',
+      'Amount (₹)': (record.status === 'completed' && record.isPassHolder)
+        ? "Pass"
+        : (record.amountDue || '-'),
       'Status': record.status
     }));
     
@@ -255,6 +259,12 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Active</Badge>;
     }
     return <Badge variant="default" className="bg-green-100 text-green-700">Completed</Badge>;
+  };
+
+  const renderAmountCell = (record: ParkingRecord) => {
+    if (record.status === 'completed' && record.isPassHolder)
+      return (<span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-semibold">Pass</span>);
+    return record.amountDue ? `₹${record.amountDue}` : '-';
   };
 
   return (
@@ -465,7 +475,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                         </TableCell>
                         <TableCell>{formatDuration(record.duration)}</TableCell>
                         <TableCell>
-                          {record.amountDue ? `₹${record.amountDue}` : '-'}
+                          {renderAmountCell(record)}
                         </TableCell>
                         <TableCell>{getStatusBadge(record.status)}</TableCell>
                       </TableRow>
