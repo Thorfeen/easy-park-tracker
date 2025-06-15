@@ -3,10 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Car, Clock, Calendar } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDurationFull } from "@/utils/parkingCharges";
 import { Checkbox } from "@/components/ui/checkbox";
+import VehicleTypeSelector from "./vehicle-entry/VehicleTypeSelector";
+import HelmetSelector from "./vehicle-entry/HelmetSelector";
 import PassDetectionBanner from "./vehicle-entry/PassDetectionBanner";
 import ParkingRatesGrid from "./vehicle-entry/ParkingRatesGrid";
 import { format } from "date-fns";
@@ -251,7 +254,8 @@ const VehicleEntry = ({
               {/* Vehicle Type + Helmet all in one row */}
               <div>
                 <span className="block font-semibold text-blue-700 mb-2">Vehicle Type:</span>
-                <div className="flex flex-row gap-x-8 items-center">
+                <div className="flex flex-row gap-6 items-center">
+                  {/* Four vehicle type checkboxes */}
                   {vehicleTypes.map((type) => (
                     <div key={type.value} className="flex items-center space-x-2">
                       <Checkbox
@@ -259,7 +263,6 @@ const VehicleEntry = ({
                         checked={vehicleType === type.value}
                         onCheckedChange={() => handleVehicleTypeChange(type.value)}
                         aria-checked={vehicleType === type.value}
-                        className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       />
                       <Label htmlFor={type.value} className="text-sm font-medium cursor-pointer">
                         {type.label}
@@ -277,7 +280,6 @@ const VehicleEntry = ({
                           : null
                       }
                       disabled={!(vehicleType === "cycle" || vehicleType === "two-wheeler")}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                     />
                     <Label htmlFor="helmet" className="text-sm font-medium cursor-pointer">
                       Helmet
