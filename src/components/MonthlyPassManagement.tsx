@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CreditCard, User, Phone, Car, Calendar, Plus, Search } from "lucide-react";
+import { ArrowLeft, CreditCard, User, Phone, Car, Calendar, Plus, Search, Bike } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MonthlyPass } from "@/types/parking";
 import { useParkingRecords } from "@/hooks/useParkingRecords";
@@ -19,28 +19,61 @@ interface MonthlyPassManagementProps {
 
 type ViewState = 'overview' | 'active' | 'expired' | 'all' | 'create';
 
+const passTypes = [
+  {
+    value: 'cycle' as const,
+    label: 'Cycle Pass',
+    subLabel: 'Cycle',
+    price: 300,
+    description: 'For Cycle parking',
+    vehicleType: 'cycle',
+    icon: Bike
+  },
+  {
+    value: 'two-wheeler' as const,
+    label: 'Two-Wheeler Pass / Motorcycle Pass',
+    subLabel: 'Motorcycle',
+    price: 600,
+    description: 'For Two-Wheelers / Motorcycles',
+    vehicleType: 'two-wheeler',
+    icon: Bike
+  },
+  {
+    value: 'three-wheeler' as const,
+    label: 'Three-Wheeler Pass / Auto Rickshaw Pass',
+    subLabel: 'Auto Rickshaw',
+    price: 1200,
+    description: 'For Three-Wheelers / Auto Rickshaws',
+    vehicleType: 'three-wheeler',
+    icon: () => <span role="img" aria-label="Auto Rickshaw" className="text-2xl mb-1">🛺</span>
+  },
+  {
+    value: 'four-wheeler' as const,
+    label: 'Four-Wheeler Pass / Car Pass',
+    subLabel: 'Car',
+    price: 1500,
+    description: 'For Four-Wheelers / Cars',
+    vehicleType: 'four-wheeler',
+    icon: Car
+  },
+];
+
 const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPassManagementProps) => {
   const [currentView, setCurrentView] = useState<ViewState>('overview');
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     vehicleNumber: '',
-    passType: 'basic' as 'basic' | 'standard' | 'premium',
-    vehicleType: 'two-wheeler' as 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    passType: 'cycle' as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    vehicleType: 'cycle' as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
     ownerName: '',
     ownerPhone: '',
-    duration: '1' // months
+    duration: '1'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   // Fetch parking records data
   const { parkingRecords } = useParkingRecords(userId);
-
-  const passTypes = [
-    { value: 'basic', label: 'Basic Pass', price: 500, description: 'For Two Wheelers', vehicleType: 'two-wheeler' },
-    { value: 'standard', label: 'Standard Pass', price: 800, description: 'For Three Wheelers', vehicleType: 'three-wheeler' },
-    { value: 'premium', label: 'Premium Pass', price: 1200, description: 'For Four Wheelers', vehicleType: 'four-wheeler' }
-  ];
 
   const activePasses = passes.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const expiredPasses = passes.filter(pass => pass.status === 'expired' || pass.endDate <= new Date());
@@ -139,7 +172,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
       const newPass: Omit<MonthlyPass, 'id'> = {
         vehicleNumber: formData.vehicleNumber.toUpperCase(),
         passType: formData.passType,
-        vehicleType: selectedPassType?.vehicleType as 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+        vehicleType: selectedPassType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
         ownerName: formData.ownerName,
         ownerPhone: formData.ownerPhone,
         startDate,
@@ -157,8 +190,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
 
       setFormData({
         vehicleNumber: '',
-        passType: 'basic',
-        vehicleType: 'two-wheeler',
+        passType: 'cycle',
+        vehicleType: 'cycle',
         ownerName: '',
         ownerPhone: '',
         duration: '1'
@@ -181,10 +214,24 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
         <div className="flex justify-between items-start">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Car className="h-4 w-4" />
+              {/* Icon for each pass type */}
+              {(pass.passType === "cycle"
+                ? <Bike className="h-4 w-4" />
+                : pass.passType === "two-wheeler"
+                ? <Bike className="h-4 w-4" />
+                : pass.passType === "three-wheeler"
+                ? <span role="img" aria-label="Auto Rickshaw" className="text-lg">🛺</span>
+                : pass.passType === "four-wheeler"
+                ? <Car className="h-4 w-4" />
+                : null
+              )}
               <span className="font-semibold">{pass.vehicleNumber}</span>
-              <Badge variant="default" className={pass.status === 'active' && pass.endDate > new Date() ? "bg-green-600" : "bg-red-600"}>
-                {pass.passType.toUpperCase()}
+              <Badge variant="default" className={
+                pass.status === 'active' && pass.endDate > new Date()
+                  ? "bg-green-600"
+                  : "bg-red-600"
+              }>
+                {(passTypes.find(type => type.value === pass.passType)?.label || pass.passType).toUpperCase()}
               </Badge>
               {pass.endDate <= new Date() && (
                 <Badge variant="destructive" className="text-xs">
@@ -224,7 +271,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
           <Input
             id="vehicleNumber"
             value={formData.vehicleNumber}
-            onChange={(e) => setFormData({...formData, vehicleNumber: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
             placeholder="Enter vehicle number"
             className="text-lg py-3"
             disabled={isSubmitting}
@@ -238,7 +285,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
           <Input
             id="ownerName"
             value={formData.ownerName}
-            onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
             placeholder="Enter owner name"
             className="text-lg py-3"
             disabled={isSubmitting}
@@ -252,7 +299,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
           <Input
             id="ownerPhone"
             value={formData.ownerPhone}
-            onChange={(e) => setFormData({...formData, ownerPhone: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, ownerPhone: e.target.value })}
             placeholder="Enter phone number"
             className="text-lg py-3"
             disabled={isSubmitting}
@@ -263,7 +310,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
           <Label className="text-base font-semibold">Duration *</Label>
           <RadioGroup
             value={formData.duration}
-            onValueChange={(value) => setFormData({...formData, duration: value})}
+            onValueChange={(value) => setFormData({ ...formData, duration: value })}
             className="flex gap-4"
           >
             <div className="flex items-center space-x-2">
@@ -289,9 +336,9 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
           onValueChange={(value) => {
             const selectedType = passTypes.find(type => type.value === value);
             setFormData({
-              ...formData, 
-              passType: value as 'basic' | 'standard' | 'premium',
-              vehicleType: selectedType?.vehicleType as 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
+              ...formData,
+              passType: value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+              vehicleType: selectedType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
             });
           }}
           className="space-y-3"
@@ -463,7 +510,20 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
             )}
 
             {currentView === 'create' && renderCreateForm()}
-            {(currentView === 'active' || currentView === 'expired' || currentView === 'all') && renderPassList()}
+            {(currentView === 'active' || currentView === 'expired' || currentView === 'all') && getFilteredPasses().length > 0 && (
+              <div className="space-y-3">
+                {getFilteredPasses().map(renderPassCard)}
+              </div>
+            )}
+            {(currentView === 'active' || currentView === 'expired' || currentView === 'all') && getFilteredPasses().length === 0 && (
+              <div className="text-center py-8">
+                <CreditCard className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">No Passes Found</h3>
+                <p className="text-gray-500">
+                  {searchTerm ? 'No passes match your search criteria.' : `No ${viewTitle.toLowerCase()} available.`}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
