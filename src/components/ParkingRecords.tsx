@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { ParkingRecord } from "@/pages/Index";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 interface ParkingRecordsProps {
@@ -98,7 +99,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       record.status
     ]);
     
-    autoTable(doc, {
+    (doc as any).autoTable({
       head: [['Vehicle Number', 'Type', 'Entry Time', 'Exit Time', 'Duration', 'Amount', 'Status']],
       body: tableData,
       startY: 75,
