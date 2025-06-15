@@ -216,18 +216,17 @@ const VehicleEntry = ({
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8">
-            {/* Date and Time in single line */}
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-blue-700">
-                {/* Single line: Date (icon+label+value), then Time (icon+label+value) */}
                 <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  <span className="font-semibold">Current Time:</span>
+                  <span>{currentTime}</span>
+                </div>
+                <div className="flex items-center gap-2 sm:ml-8">
                   <Clock className="h-5 w-5" />
                   <span className="font-semibold">Date:</span>
                   <span>{currentDate}</span>
-                  <span className="mx-3 hidden sm:inline-block">|</span>
-                  <Clock className="h-5 w-5" />
-                  <span className="font-semibold">Time:</span>
-                  <span>{currentTime}</span>
                 </div>
               </div>
             </div>
