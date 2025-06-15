@@ -12,7 +12,7 @@ import { ParkingRecord } from "@/pages/Index";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 interface ParkingRecordsProps {
@@ -99,7 +99,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       record.status
     ]);
     
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [['Vehicle Number', 'Type', 'Entry Time', 'Exit Time', 'Duration', 'Amount', 'Status']],
       body: tableData,
       startY: 75,
