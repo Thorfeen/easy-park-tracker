@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,9 +32,10 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
   const { toast } = useToast();
 
   const passTypes = [
-    { value: 'basic', label: 'Basic Pass', price: 500, description: 'For Two Wheelers', vehicleType: 'two-wheeler' },
-    { value: 'standard', label: 'Standard Pass', price: 800, description: 'For Three Wheelers', vehicleType: 'three-wheeler' },
-    { value: 'premium', label: 'Premium Pass', price: 1200, description: 'For Four Wheelers', vehicleType: 'four-wheeler' }
+    { value: 'cycle', label: 'Cycle Pass', aliases: ['Cycle'], price: 300, description: 'For bicycles/Cycles only', vehicleType: 'cycle' },
+    { value: 'two-wheeler', label: 'Two-Wheeler Pass', aliases: ['Motercycle', 'Bike'], price: 600, description: 'For Motorcycles, Scooters', vehicleType: 'two-wheeler' },
+    { value: 'three-wheeler', label: 'Three-Wheeler Pass', aliases: ['Auto Rickshaw'], price: 1200, description: 'For Auto Rickshaws only', vehicleType: 'three-wheeler' },
+    { value: 'four-wheeler', label: 'Four-Wheeler Pass', aliases: ['Car'], price: 1500, description: 'For Cars/SUVs', vehicleType: 'four-wheeler' }
   ];
 
   const activePasses = passes.filter(pass => pass.status === 'active' && pass.endDate > new Date());
@@ -106,7 +106,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
       const newPass: Omit<MonthlyPass, 'id'> = {
         vehicleNumber: formData.vehicleNumber.toUpperCase(),
         passType: formData.passType,
-        vehicleType: selectedPassType?.vehicleType as 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+        vehicleType: selectedPassType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
         ownerName: formData.ownerName,
         ownerPhone: formData.ownerPhone,
         startDate,
@@ -257,8 +257,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
             const selectedType = passTypes.find(type => type.value === value);
             setFormData({
               ...formData, 
-              passType: value as 'basic' | 'standard' | 'premium',
-              vehicleType: selectedType?.vehicleType as 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
+              passType: value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+              vehicleType: selectedType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
             });
           }}
           className="space-y-3"
@@ -268,7 +268,13 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
               <RadioGroupItem value={type.value} id={type.value} />
               <div className="flex-1">
                 <Label htmlFor={type.value} className="font-medium cursor-pointer">
-                  {type.label} - ₹{type.price * parseInt(formData.duration)}/
+                  {type.label}
+                  {type.aliases && type.aliases.length > 0 && (
+                    <span className="text-xs text-gray-400 ml-2">
+                      / {type.aliases.join(' / ')}
+                    </span>
+                  )}
+                  {' '} - ₹{type.price * parseInt(formData.duration)}/
                   {formData.duration === '1' ? 'month' : `${formData.duration} months`}
                 </Label>
                 <p className="text-sm text-gray-500">{type.description}</p>
