@@ -5,7 +5,8 @@ import { ParkingRecord } from "@/types/parking";
 
 // Use type as per Supabase table (all possible fields, required for insert)
 type RawRecord = {
-  id: number;
+-  id: number;
++  id?: number;
   vehicle_number: string;
   vehicle_type: string;
   entry_time: string;
