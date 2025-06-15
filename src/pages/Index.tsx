@@ -33,6 +33,12 @@ const Index = () => {
   const activePasses = monthlyPasses.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const passHolderVehicles = activeVehicles.filter(record => record.isPassHolder);
 
+  // New stats for monthly passes (counts by type)
+  const cyclePassCount = monthlyPasses.filter(pass => pass.vehicleType === 'cycle').length;
+  const twoWheelerPassCount = monthlyPasses.filter(pass => pass.vehicleType === 'two-wheeler').length;
+  const threeWheelerPassCount = monthlyPasses.filter(pass => pass.vehicleType === 'three-wheeler').length;
+  const fourWheelerPassCount = monthlyPasses.filter(pass => pass.vehicleType === 'four-wheeler').length;
+
   // New: Update lastUsedAt for a monthly pass
   const updatePassLastUsedAt = (passId: string) => {
     setMonthlyPasses(prev =>
@@ -273,21 +279,40 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
+                {/* Modified: Monthly Passes Stats Card */}
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Monthly Passes</CardTitle>
-                    <CreditCard className="h-4 w-4 text-purple-600" />
+                    <CreditCard className="h-4 w-4 text-green-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-purple-600">{activePasses.length}</div>
+                    {/* Main stat value & green color */}
+                    <div className="text-2xl font-bold text-green-600">{activePasses.length}</div>
                     <div className="space-y-1 mt-2">
+                      {/* Pass Holders Parked */}
                       <div className="flex items-center justify-between text-xs">
                         <span>Pass Holders Parked</span>
-                        <span className="font-medium">{passHolderVehicles.length}</span>
+                        <span className="font-medium text-green-700">{passHolderVehicles.length}</span>
                       </div>
+                      {/* Total Cycle Passes */}
                       <div className="flex items-center justify-between text-xs">
-                        <span>Total Passes</span>
-                        <span className="font-medium">{monthlyPasses.length}</span>
+                        <span>Total Cycle Passes</span>
+                        <span className="font-medium text-green-700">{cyclePassCount}</span>
+                      </div>
+                      {/* Total Two-Wheeler Passes */}
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Total Two-Wheeler Passes</span>
+                        <span className="font-medium text-green-700">{twoWheelerPassCount}</span>
+                      </div>
+                      {/* Total Three-Wheeler Passes */}
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Total Three-Wheeler Passes</span>
+                        <span className="font-medium text-green-700">{threeWheelerPassCount}</span>
+                      </div>
+                      {/* Total Four-Wheeler Passes */}
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Total Four-Wheeler Passes</span>
+                        <span className="font-medium text-green-700">{fourWheelerPassCount}</span>
                       </div>
                     </div>
                   </CardContent>
