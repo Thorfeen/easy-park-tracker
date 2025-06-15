@@ -40,7 +40,26 @@ function toAppRecord(raw: RawRecord): ParkingRecord {
   };
 }
 
-// For insert/update, only include correct keys
+// Build a complete insert object for addEntry. For updates, use partials.
+function toRawInsert(record: Omit<ParkingRecord, "id" | "status"> & { status?: ParkingRecord["status"] }): RawRecord {
+  return {
+    // id and created_at handled by DB defaults
+    vehicle_number: record.vehicleNumber,
+    vehicle_type: record.vehicleType,
+    entry_time: record.entryTime.toISOString(),
+    exit_time: record.exitTime ? record.exitTime.toISOString() : null,
+    duration: record.duration ?? null,
+    amount_due: record.amountDue ?? null,
+    status: record.status ?? "active",
+    is_pass_holder: record.isPassHolder ?? false,
+    pass_id: record.passId ?? null,
+    calculation_breakdown: record.calculationBreakdown ?? null,
+    helmet: record.helmet ?? null,
+    created_at: null // let DB set default
+  };
+}
+
+// For updates only, can be partial
 function fromAppRecord(record: Partial<ParkingRecord>): Partial<RawRecord> {
   return {
     vehicle_number: record.vehicleNumber,
@@ -85,10 +104,8 @@ export function useParkingRecords() {
   const addEntry = async (
     record: Omit<ParkingRecord, "id" | "status"> & { status?: ParkingRecord["status"] }
   ) => {
-    // Extract and set required fields for the insert (per table definition)
-    const toInsert = {
-      ...fromAppRecord({ ...record, status: "active" })
-    };
+    // Construct an object with all required fields for insert
+    const toInsert = toRawInsert(record);
 
     // required fields check
     if (
@@ -106,7 +123,7 @@ export function useParkingRecords() {
 
     const { data, error } = await supabase
       .from("parking_records")
-      .insert([toInsert]) // fix: wrap with array to insert one row
+      .insert([toInsert]) // Pass as array for insert
       .select()
       .single();
 
