@@ -4,18 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Car, Clock, ScanLine } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ArrowLeft, Car, Clock, ScanLine, Bike, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import VehicleScanner from "./VehicleScanner";
 
 interface VehicleEntryProps {
-  onAddEntry: (vehicleNumber: string) => void;
+  onAddEntry: (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
   onBack: () => void;
 }
 
 const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
+  const [vehicleType, setVehicleType] = useState<'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const { toast } = useToast();
@@ -33,15 +35,25 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
       return;
     }
 
+    if (!vehicleType) {
+      toast({
+        title: "Error",
+        description: "Please select a vehicle type",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      onAddEntry(vehicleNumber);
+      onAddEntry(vehicleNumber, vehicleType);
       toast({
         title: "Success!",
-        description: `Vehicle ${vehicleNumber.toUpperCase()} has been registered successfully`,
+        description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
       });
       setVehicleNumber("");
+      setVehicleType('two-wheeler');
     } catch (error) {
       toast({
         title: "Error",
@@ -78,6 +90,27 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
   }
 
   const currentTime = new Date().toLocaleString();
+
+  const vehicleTypes = [
+    {
+      value: 'two-wheeler' as const,
+      label: 'Two Wheeler',
+      icon: Bike,
+      description: 'Motorcycles, Scooters, Bicycles'
+    },
+    {
+      value: 'three-wheeler' as const,
+      label: 'Three Wheeler',
+      icon: Car,
+      description: 'Auto-rickshaws, Three-wheeled vehicles'
+    },
+    {
+      value: 'four-wheeler' as const,
+      label: 'Four Wheeler',
+      icon: Truck,
+      description: 'Cars, SUVs, Trucks'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -164,6 +197,33 @@ const VehicleEntry = ({ onAddEntry, onBack }: VehicleEntryProps) => {
                 <p className="text-sm text-gray-600">
                   Enter the complete vehicle number including any letters and numbers
                 </p>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Vehicle Type *</Label>
+                <RadioGroup
+                  value={vehicleType}
+                  onValueChange={(value) => setVehicleType(value as 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
+                  className="space-y-3"
+                >
+                  {vehicleTypes.map((type) => {
+                    const Icon = type.icon;
+                    return (
+                      <div key={type.value} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <RadioGroupItem value={type.value} id={type.value} />
+                        <div className="flex items-center space-x-3 flex-1">
+                          <Icon className="h-6 w-6 text-gray-600" />
+                          <div className="flex-1">
+                            <Label htmlFor={type.value} className="font-medium cursor-pointer">
+                              {type.label}
+                            </Label>
+                            <p className="text-sm text-gray-500">{type.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </RadioGroup>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
