@@ -190,7 +190,6 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         lineWidth: 0.5,
         fillColor: [255, 255, 255] as [number, number, number],
         textColor: 30,
-        borderRadius: 5, // this is a custom prop; see below for workaround
         cellWidth: 'wrap'
       },
       headStyles: { 
@@ -204,7 +203,6 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         cellPadding: 4,
         lineWidth: 0.5,
         lineColor: [180, 180, 255] as [number, number, number],
-        borderRadius: 7, // not native, but triggers workaround
         cellWidth: 'wrap'
       },
       alternateRowStyles: {
