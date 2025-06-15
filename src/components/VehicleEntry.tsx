@@ -182,9 +182,8 @@ const VehicleEntry = ({
     }
   };
 
-  // Format current time and date in 12-hour format and readable date
+  // Format current time in 12-hour format
   const currentTime = format(new Date(), "hh:mm a");
-  const currentDate = format(new Date(), "MMMM d, yyyy");
 
   const vehicleTypes = [
     { value: 'cycle' as const, label: 'Cycle', icon: Bike, description: 'Bicycle only' },
@@ -217,16 +216,10 @@ const VehicleEntry = ({
           </CardHeader>
           <CardContent className="p-8">
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-blue-700">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  <span className="font-semibold">Current Time:</span>
-                  <span>{currentTime}</span>
-                </div>
-                <div className="flex items-center gap-2 sm:ml-8">
-                  <span className="font-semibold">Date:</span>
-                  <span>{currentDate}</span>
-                </div>
+              <div className="flex items-center gap-2 text-blue-700">
+                <Clock className="h-5 w-5" />
+                <span className="font-semibold">Current Time:</span>
+                <span>{currentTime}</span>
               </div>
             </div>
             {/* Monthly Pass/Mismatch banner */}
