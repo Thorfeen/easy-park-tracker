@@ -27,7 +27,8 @@ const Index = () => {
     });
   }, []);
 
-  const [currentView, setCurrentView: React.Dispatch<React.SetStateAction<"dashboard" | "entry" | "exit" | "records" | "passes">>] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
+  // Fix: Correctly type only the state, not the setter function
+  const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
 
   const {
     parkingRecords,
