@@ -7,6 +7,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDurationFull } from "@/utils/parkingCharges";
+import VehicleTypeSelector from "./vehicle-entry/VehicleTypeSelector";
+import HelmetSelector from "./vehicle-entry/HelmetSelector";
+import PassDetectionBanner from "./vehicle-entry/PassDetectionBanner";
+import ParkingRatesGrid from "./vehicle-entry/ParkingRatesGrid";
 
 interface VehicleEntryProps {
   onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', helmet: boolean, toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
@@ -215,121 +219,20 @@ const VehicleEntry = ({
                 <span>{currentTime}</span>
               </div>
             </div>
-
-            {(detectedPass || passTypeMismatch) && (
-              <div className={`mb-6 p-4 rounded-lg border ${passTypeMismatch ? "bg-red-50 border-red-200" : "bg-purple-50 border-purple-200"}`}>
-                <div className={`flex items-center gap-2 mb-2 ${passTypeMismatch ? "text-red-700" : "text-purple-700"}`}>
-                  <CreditCard className="h-5 w-5" />
-                  <span className="font-semibold">
-                    {passTypeMismatch ? "Pass Type Mismatch!" : "Monthly Pass Detected!"}
-                  </span>
-                </div>
-                <div className="space-y-1 text-sm">
-                  {detectedPass && (
-                    <>
-                      <p><strong>Owner:</strong> {detectedPass.ownerName}</p>
-                      <p><strong>Pass Type:</strong> {detectedPass.passType?.toUpperCase?.()}</p>
-                      <p><strong>Valid Until:</strong> {detectedPass.endDate ? new Date(detectedPass.endDate).toLocaleDateString() : ""}</p>
-                    </>
-                  )}
-                  {passTypeMismatch ? (
-                    <p className="text-red-600 font-medium">
-                      Vehicle type does not match the active pass category. Please select: <b>{detectedPass?.passType?.toUpperCase?.() ?? "the correct type"}</b>
-                    </p>
-                  ) : detectedPass ? (
-                    <p className="text-green-600 font-medium">✓ Free parking for pass holders</p>
-                  ) : null}
-                </div>
-              </div>
-            )}
+            {/* Monthly Pass/Mismatch banner */}
+            <PassDetectionBanner detectedPass={detectedPass} passTypeMismatch={passTypeMismatch} />
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Vehicle Type *</Label>
                 <div className="flex flex-row flex-wrap gap-6 items-stretch">
-                  <RadioGroup
-                    value={vehicleType}
-                    onValueChange={handleVehicleTypeChange}
-                    className="flex flex-row flex-wrap gap-6 items-stretch"
-                  >
-                    {vehicleTypes.map((type) => {
-                      const Icon = type.icon;
-                      return (
-                        <div
-                          key={type.value}
-                          className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer w-36 h-40 transition-all duration-200 gap-2"
-                          style={{ minWidth: '144px', maxWidth: '144px', minHeight: '160px', maxHeight: '160px' }}
-                        >
-                          <RadioGroupItem value={type.value} id={type.value} />
-                          <div className="flex flex-col items-center mt-2">
-                            <Icon className="h-8 w-8 text-gray-600 mb-1" />
-                            <Label htmlFor={type.value} className="font-medium cursor-pointer">
-                              {type.label}
-                            </Label>
-                            <p className="text-xs text-gray-500 text-center break-words">
-                              {type.description}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </RadioGroup>
-                  {/* Helmet Card: placed in the same flex row for alignment */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() =>
-                      (vehicleType === 'cycle' || vehicleType === 'two-wheeler')
-                        ? setHelmet((h) => !h)
-                        : null
-                    }
-                    className={`
-                      flex flex-col items-center justify-center p-4 border rounded-lg transition-all duration-200 gap-2
-                      w-36 h-40
-                      ${helmet ? 'border-blue-600 bg-blue-50 shadow' : 'hover:bg-gray-50'}
-                      ${vehicleType === 'cycle' || vehicleType === 'two-wheeler'
-                        ? 'cursor-pointer opacity-100'
-                        : 'cursor-not-allowed opacity-40'}
-                    `}
-                    style={{ minWidth: '144px', maxWidth: '144px', minHeight: '160px', maxHeight: '160px' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path d="M20 21v-2a4 4 0 0 0-4-4h-4a4 4 0 0 0-4 4v2M12 3a6 6 0 0 1 6 6c0 3.314-5.373 6-6 6s-6-2.686-6-6a6 6 0 0 1 6-6z" />
-                    </svg>
-                    <Label className="font-medium">Helmet</Label>
-                    <p className="text-xs text-gray-500 text-center break-words">
-                      Add helmet for ₹2/day
-                    </p>
-                    <div className="mt-2">
-                      <input
-                        type="checkbox"
-                        checked={helmet}
-                        disabled={!(vehicleType === 'cycle' || vehicleType === 'two-wheeler')}
-                        readOnly
-                        className="accent-blue-600 h-5 w-5 outline-none"
-                        tabIndex={-1}
-                      />
-                    </div>
-                  </div>
+                  {/* Vehicle types */}
+                  <VehicleTypeSelector value={vehicleType} onChange={handleVehicleTypeChange} />
+                  {/* Helmet checkbox card */}
+                  <HelmetSelector helmet={helmet} setHelmet={setHelmet} vehicleType={vehicleType} />
                 </div>
-
-                {/* --- Parking Rates Section: visually in a single grid row --- */}
-                <div className="mt-6">
-                  <span className="block font-semibold text-blue-700 mb-2">Parking Rates:</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                    {pricingDetails.map(detail => (
-                      <div key={detail.type} className="bg-gray-50 rounded-lg p-2 border border-blue-100">
-                        <div className="font-medium text-gray-900">{detail.type}</div>
-                        <ul className="pl-4 list-disc space-y-0.5">
-                          {detail.rates.map(rate => (
-                            <li key={rate} className="text-xs text-gray-700">{rate}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* --- End Parking Rates Section --- */}
+                {/* Parking Rates row grid */}
+                <ParkingRatesGrid />
               </div>
 
               <Button
