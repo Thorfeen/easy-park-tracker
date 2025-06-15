@@ -224,6 +224,7 @@ const VehicleEntry = ({
                   <span>{currentTime}</span>
                 </div>
                 <div className="flex items-center gap-2 sm:ml-8">
+                  <Clock className="h-5 w-5" />
                   <span className="font-semibold">Date:</span>
                   <span>{currentDate}</span>
                 </div>
