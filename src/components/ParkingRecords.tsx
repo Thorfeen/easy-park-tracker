@@ -62,33 +62,42 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF('p', 'mm', 'a4'); // Set to A4 format
+    const doc = new jsPDF('p', 'mm', 'a4');
     const exportRecords = getExportFilteredRecords();
-    
-    // Modern color scheme - properly typed as tuples
-    const primaryColor: [number, number, number] = [79, 70, 229]; // Indigo
-    const secondaryColor: [number, number, number] = [236, 236, 241]; // Light gray
-    const accentColor: [number, number, number] = [99, 102, 241]; // Lighter indigo
-    
-    // Set consistent font for entire document
+
+    const primaryColor: [number, number, number] = [79, 70, 229];
+    const secondaryColor: [number, number, number] = [236, 236, 241];
+    const accentColor: [number, number, number] = [99, 102, 241];
+
     doc.setFont('helvetica', 'normal');
-    
+
     // Header with rounded background
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.roundedRect(10, 10, 190, 25, 3, 3, 'F');
-    
+
     // Title with consistent font
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.text('Railway Parking Management - Records', 105, 25, { align: 'center' });
-    
+
+    // Add generated date/time under header in 12-hour format
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text(
+      `Generated on ${format(new Date(), 'dd/MM/yyyy h:mm a')}`,
+      105,
+      33,
+      { align: 'center' }
+    );
+
     // Reset text color and font
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'normal');
-    
+
     let yPosition = 45;
-    
+
     // Date range section with modern styling
     if (exportDateFrom || exportDateTo) {
       doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
@@ -198,16 +207,6 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       tableLineWidth: 0.5,
       theme: 'grid'
     });
-    
-    // Footer with rounded background
-    const finalY = (doc as any).lastAutoTable?.finalY || yPosition + 50;
-    doc.setFillColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    doc.roundedRect(10, finalY + 10, 190, 15, 2, 2, 'F');
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Generated on ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, finalY + 20, { align: 'center' });
     
     doc.save(`parking-records-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
