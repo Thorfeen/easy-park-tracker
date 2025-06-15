@@ -256,14 +256,26 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
 
   const getStatusBadge = (status: string) => {
     if (status === 'active') {
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Active</Badge>;
+      return <Badge variant="secondary" className="bg-blue-100 text-blue-700 rounded-full">Active</Badge>;
     }
-    return <Badge variant="default" className="bg-green-100 text-green-700">Completed</Badge>;
+    return (
+      <Badge
+        variant="default"
+        className="bg-green-100 text-green-700 rounded-full hover:bg-green-200 !important"
+        style={{ transition: 'background 0.2s' }}
+      >
+        Completed
+      </Badge>
+    );
   };
 
   const renderAmountCell = (record: ParkingRecord) => {
     if (record.status === 'completed' && record.isPassHolder)
-      return (<span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-semibold">Pass</span>);
+      return (
+        <span className="inline-block bg-purple-100 text-purple-700 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+          Pass
+        </span>
+      );
     return record.amountDue ? `₹${record.amountDue}` : '-';
   };
 
