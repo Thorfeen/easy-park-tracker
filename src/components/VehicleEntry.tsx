@@ -23,6 +23,25 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
   const [passTypeMismatch, setPassTypeMismatch] = useState(false);
   const { toast } = useToast();
 
+  // Helper to safely call toast callback
+  const safeToastCallback = ({
+    title,
+    description,
+    variant,
+  }: {
+    title: string;
+    description: string;
+    variant?: string;
+  }) => {
+    // only accept "default" or "destructive"
+    const allowedVariant = variant === "destructive" ? "destructive" : "default";
+    toast({
+      title,
+      description,
+      variant: allowedVariant,
+    });
+  };
+
   const resetState = () => {
     setVehicleNumber("");
     setVehicleType('two-wheeler');
@@ -53,8 +72,8 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
 
     setIsSubmitting(true);
 
-    // Pass the toast callback in onAddEntry for granular error feedback
-    const result = onAddEntry(vehicleNumber, vehicleType, toast);
+    // Pass the safeToastCallback in onAddEntry for granular error feedback
+    const result = onAddEntry(vehicleNumber, vehicleType, safeToastCallback);
 
     if (result === false) {
       setIsSubmitting(false);
@@ -69,6 +88,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
     toast({
       title: "Success!",
       description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
+      variant: "default",
     });
     resetState();
     setIsSubmitting(false);
