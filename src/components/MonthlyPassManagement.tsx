@@ -254,15 +254,27 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
           <RadioGroup
             value={formData.duration}
             onValueChange={(value) => setFormData({ ...formData, duration: value })}
-            className="flex gap-4"
+            className="flex gap-4 flex-wrap"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="1" id="1month" />
               <Label htmlFor="1month">1 Month</Label>
             </div>
             <div className="flex items-center space-x-2">
+              <RadioGroupItem value="2" id="2months" />
+              <Label htmlFor="2months">2 Months</Label>
+            </div>
+            <div className="flex items-center space-x-2">
               <RadioGroupItem value="3" id="3months" />
               <Label htmlFor="3months">3 Months</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="4" id="4months" />
+              <Label htmlFor="4months">4 Months</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="5" id="5months" />
+              <Label htmlFor="5months">5 Months</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="6" id="6months" />
