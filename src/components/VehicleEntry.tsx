@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +9,14 @@ import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface VehicleEntryProps {
-  onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
+  onAddEntry: (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
   onBack: () => void;
   findActivePass: (vehicleNumber: string) => any | null;
 }
 
 const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
-  const [vehicleType, setVehicleType] = useState<'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('cycle');
+  const [vehicleType, setVehicleType] = useState<'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const { toast } = useToast();
@@ -50,7 +51,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
         description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
       });
       setVehicleNumber("");
-      setVehicleType('cycle');
+      setVehicleType('two-wheeler');
     } catch (error) {
       toast({
         title: "Error",
@@ -81,11 +82,6 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
 
   const vehicleTypes = [
     {
-      value: 'cycle' as const,
-      label: 'Cycle',
-      icon: Bike,
-    },
-    {
       value: 'two-wheeler' as const,
       label: 'Two Wheeler',
       icon: Bike,
@@ -93,6 +89,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
     {
       value: 'three-wheeler' as const,
       label: 'Three Wheeler',
+      // Using rickshaw emoji for visual distinction since icon is not in Lucide.
       icon: () => <span role="img" aria-label="Auto Rickshaw" className="text-2xl mb-1">🛺</span>,
     },
     {
@@ -172,7 +169,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
                 <Label className="text-base font-semibold">Vehicle Type *</Label>
                 <RadioGroup
                   value={vehicleType}
-                  onValueChange={value => setVehicleType(value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
+                  onValueChange={value => setVehicleType(value as 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
                   className="flex flex-row gap-4"
                 >
                   {vehicleTypes.map((type) => {

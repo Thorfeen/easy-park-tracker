@@ -50,9 +50,8 @@ const Index = () => {
   // Calculate total monthly pass revenue (sum of all passes' amount)
   const monthlyPassRevenue = monthlyPasses.reduce((sum, pass) => sum + (pass.amount || 0), 0);
 
-  // The following aggregation logic is changed to include "cycle"
+  // The following aggregation logic remains mostly unchanged, but now references the fetched records
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
-  const activeCycles = activeVehicles.filter(record => record.vehicleType === 'cycle');
   const activeTwoWheelers = activeVehicles.filter(record => record.vehicleType === 'two-wheeler');
   const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
   const activeFourWheelers = activeVehicles.filter(record => record.vehicleType === 'four-wheeler');
@@ -66,7 +65,7 @@ const Index = () => {
   const activePasses = monthlyPasses.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const passHolderVehicles = activeVehicles.filter(record => record.isPassHolder);
 
-  const findActivePass = (vehicleNumber: string) => {
+  const findActivePass = (vehicleNumber: string): MonthlyPass | null => {
     return monthlyPasses.find(
       pass => pass.vehicleNumber === vehicleNumber.toUpperCase() &&
         pass.status === 'active' &&
@@ -77,7 +76,7 @@ const Index = () => {
   // Persist vehicle entry to the DB
   const addVehicleEntry = (
     vehicleNumber: string,
-    vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
+    vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
   ) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activePass = findActivePass(upperVehicleNumber);
@@ -149,7 +148,7 @@ const Index = () => {
   };
 
   // Add monthly pass via DB
-  const addMonthlyPass = (passData) => {
+  const addMonthlyPass = (passData: Omit<MonthlyPass, 'id'>) => {
     createMonthlyPass.mutate(passData);
   };
 
@@ -162,6 +161,7 @@ const Index = () => {
       case 'records':
         return <ParkingRecords records={parkingRecords} passes={monthlyPasses} onBack={() => setCurrentView('dashboard')} />;
       case 'passes':
+        // Add userId prop as required
         return (
           <MonthlyPassManagement
             passes={monthlyPasses}
@@ -180,7 +180,7 @@ const Index = () => {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Active Vehicles</CardTitle>
@@ -189,13 +189,6 @@ const Index = () => {
                   <CardContent>
                     <div className="text-2xl font-bold text-blue-600">{activeVehicles.length}</div>
                     <div className="space-y-1 mt-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1">
-                          <Bike className="h-3 w-3" />
-                          Cycles
-                        </span>
-                        <span className="font-medium">{activeCycles.length}</span>
-                      </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="flex items-center gap-1">
                           <Bike className="h-3 w-3" />
