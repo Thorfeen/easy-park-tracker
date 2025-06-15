@@ -15,6 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { CalendarIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useParkingRecords } from "@/hooks/useParkingRecords";
 
 const FullscreenToggleButton = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -53,7 +54,14 @@ const FullscreenToggleButton = () => {
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
-  const [parkingRecords, setParkingRecords] = useState<ParkingRecord[]>([]);
+  const {
+    records: parkingRecords,
+    loading: parkingLoading,
+    addEntry,
+    updateExit,
+    fetchRecords,
+    setRecords,
+  } = useParkingRecords();
   const [monthlyPasses, setMonthlyPasses] = useState<MonthlyPass[]>([]);
   const isMobile = useMobileDetection();
 
@@ -122,7 +130,7 @@ const Index = () => {
   };
 
   // Make sure addVehicleEntry accepts cycles and enforces both duplicate and pass validations
-  const addVehicleEntry = (
+  const addVehicleEntry = async (
     vehicleNumber: string,
     vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
     helmet?: boolean,
@@ -130,8 +138,11 @@ const Index = () => {
   ) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
 
-    // DUPLICATE CHECK
-    if (findActiveVehicle(upperVehicleNumber)) {
+    if (activeVehicles.find(
+      record =>
+        record.vehicleNumber === upperVehicleNumber &&
+        record.status === 'active'
+    )) {
       showToast?.({
         title: "Error",
         description: `Vehicle ${upperVehicleNumber} is already inside the parking lot.`,
@@ -154,31 +165,36 @@ const Index = () => {
       return false;
     }
 
-    const newRecord: ParkingRecord = {
-      id: Date.now().toString(),
-      vehicleNumber: upperVehicleNumber,
-      vehicleType,
-      entryTime: new Date(),
-      status: 'active',
-      isPassHolder: !!matchedPass,
-      passId: matchedPass?.id,
-      helmet: helmet || false,
-    };
-    setParkingRecords(prev => [...prev, newRecord]);
-    console.log('New vehicle entry added:', newRecord);
-    return true;
+    // Create record in Supabase
+    try {
+      await addEntry({
+        vehicleNumber: upperVehicleNumber,
+        vehicleType,
+        entryTime: new Date(),
+        isPassHolder: !!matchedPass,
+        passId: matchedPass?.id,
+        status: "active",
+        helmet: helmet || false,
+      });
+      console.log('New vehicle entry saved to Supabase');
+      return true;
+    } catch (err: any) {
+      showToast?.({
+        title: "Error",
+        description: err?.message || "Failed to add entry in database",
+        variant: "destructive",
+      });
+      return false;
+    }
   };
 
-  // UPDATED EXIT PROCESSING LOGIC
-  const processVehicleExit = (vehicleNumber: string) => {
+  const processVehicleExit = async (vehicleNumber: string) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activeRecord = parkingRecords.find(
       record => record.vehicleNumber === upperVehicleNumber && record.status === 'active'
     );
 
-    if (!activeRecord) {
-      return null;
-    }
+    if (!activeRecord) return null;
 
     const exitTime = new Date();
     const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
@@ -187,14 +203,12 @@ const Index = () => {
     let amountDue = 0;
     let calculationBreakdown: string[] = [];
 
-    // Check if vehicle has active pass
+    // -- Use existing revenue and breakdown logic --
     const activePass = findActivePass(upperVehicleNumber, activeRecord.vehicleType);
-
     if (activePass && activePass.endDate > new Date()) {
       amountDue = 0;
       calculationBreakdown = [`Monthly Pass Holder (${activePass.vehicleType.toUpperCase()}): ₹0`];
     } else {
-      // Use new pricing function
       const { amount, breakdown } = calculateParkingCharges(
         activeRecord.vehicleType,
         activeRecord.entryTime,
@@ -202,33 +216,30 @@ const Index = () => {
       );
       amountDue = amount;
       calculationBreakdown = [...breakdown];
-      // Apply helmet if present and vehicle is cycle or two-wheeler
       if (activeRecord.helmet && (activeRecord.vehicleType === 'cycle' || activeRecord.vehicleType === 'two-wheeler')) {
         const helmetCharge = durationDays * 2;
         amountDue += helmetCharge;
         calculationBreakdown.push(`Helmet Charges: ₹2 x ${durationDays} day(s) = ₹${helmetCharge}`);
       }
     }
-    const updatedRecord = {
-      ...activeRecord,
-      exitTime,
-      duration: durationHours,
-      amountDue,
-      calculationBreakdown,
-      status: 'completed' as const,
-      isPassHolder: !!activePass,
-      passId: activePass?.id,
-      helmet: activeRecord.helmet || false,
-    };
 
-    setParkingRecords(prev =>
-      prev.map(record =>
-        record.id === activeRecord.id ? updatedRecord : record
-      )
-    );
-
-    console.log('Vehicle exit processed:', updatedRecord);
-    return updatedRecord;
+    try {
+      const updatedRecord = await updateExit(activeRecord.id, {
+        exitTime,
+        duration: durationHours,
+        amountDue,
+        calculationBreakdown,
+        status: "completed",
+        isPassHolder: !!activePass,
+        passId: activePass?.id,
+        helmet: activeRecord.helmet || false,
+      });
+      console.log('Vehicle exit processed & updated in Supabase:', updatedRecord);
+      return updatedRecord;
+    } catch (err: any) {
+      console.error('Error updating vehicle exit in Supabase:', err);
+      return null;
+    }
   };
 
   const addMonthlyPass = (passData: Omit<MonthlyPass, 'id'>) => {

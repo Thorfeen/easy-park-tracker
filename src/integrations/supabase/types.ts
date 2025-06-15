@@ -9,7 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      parking_records: {
+        Row: {
+          amount_due: number | null
+          calculation_breakdown: Json | null
+          created_at: string | null
+          duration: number | null
+          entry_time: string
+          exit_time: string | null
+          helmet: boolean | null
+          id: number
+          is_pass_holder: boolean | null
+          pass_id: string | null
+          status: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Insert: {
+          amount_due?: number | null
+          calculation_breakdown?: Json | null
+          created_at?: string | null
+          duration?: number | null
+          entry_time: string
+          exit_time?: string | null
+          helmet?: boolean | null
+          id?: number
+          is_pass_holder?: boolean | null
+          pass_id?: string | null
+          status: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Update: {
+          amount_due?: number | null
+          calculation_breakdown?: Json | null
+          created_at?: string | null
+          duration?: number | null
+          entry_time?: string
+          exit_time?: string | null
+          helmet?: boolean | null
+          id?: number
+          is_pass_holder?: boolean | null
+          pass_id?: string | null
+          status?: string
+          vehicle_number?: string
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
