@@ -236,7 +236,7 @@ const VehicleEntry = ({
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Vehicle Number Entry Box */}
               <div>
-                <Label htmlFor="vehicle-number" className="text-blue-700 font-semibold mb-1 block">
+                <Label htmlFor="vehicle-number" className="text-blue-700 font-semibold mb-2 block">
                   Vehicle Number:
                 </Label>
                 <Input

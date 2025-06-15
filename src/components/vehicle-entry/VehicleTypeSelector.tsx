@@ -25,7 +25,7 @@ const VehicleTypeSelector = ({ value, onChange }: VehicleTypeSelectorProps) => (
       className="flex flex-row flex-wrap gap-6 items-stretch"
     >
       {vehicleTypes.map((type) => {
-        const Icon = type.icon;
+        // Icon removed as per user request
         return (
           <div
             key={type.value}
@@ -34,7 +34,6 @@ const VehicleTypeSelector = ({ value, onChange }: VehicleTypeSelectorProps) => (
           >
             <RadioGroupItem value={type.value} id={type.value} />
             <div className="flex flex-col items-center mt-2">
-              <Icon className="h-8 w-8 text-gray-600 mb-1" />
               <Label htmlFor={type.value} className="font-medium cursor-pointer">
                 {type.label}
               </Label>
@@ -50,3 +49,4 @@ const VehicleTypeSelector = ({ value, onChange }: VehicleTypeSelectorProps) => (
 );
 
 export default VehicleTypeSelector;
+
