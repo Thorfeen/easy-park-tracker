@@ -1,4 +1,3 @@
-
 export interface MonthlyPass {
   id: string;
   vehicleNumber: string;
@@ -24,7 +23,7 @@ export interface PassHolder {
 export interface ParkingRecord {
   id: string;
   vehicleNumber: string;
-  vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler';
+  vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler';
   entryTime: Date;
   exitTime?: Date;
   duration?: number;
@@ -33,4 +32,3 @@ export interface ParkingRecord {
   isPassHolder?: boolean;
   passId?: string;
 }
-
