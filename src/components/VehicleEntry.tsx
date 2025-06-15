@@ -89,12 +89,13 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
     {
       value: 'three-wheeler' as const,
       label: 'Three Wheeler',
-      icon: Car,
+      // Using rickshaw emoji for visual distinction since icon is not in Lucide.
+      icon: () => <span role="img" aria-label="Auto Rickshaw" className="text-2xl mb-1">🛺</span>,
     },
     {
       value: 'four-wheeler' as const,
       label: 'Four Wheeler',
-      icon: Truck,
+      icon: Car, // switched from Truck to Car
     }
   ];
 
