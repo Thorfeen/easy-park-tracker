@@ -57,8 +57,15 @@ const Index = () => {
     const exitTime = new Date();
     const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60)); // Round up to next hour
-    const hourlyRate = 50; // ₹50 per hour
-    const amountDue = durationHours * hourlyRate;
+    
+    // New pricing structure: ₹24 for first 6 hours, then ₹10 for each additional hour
+    let amountDue;
+    if (durationHours <= 6) {
+      amountDue = 24; // ₹24 for up to 6 hours
+    } else {
+      const extraHours = durationHours - 6;
+      amountDue = 24 + (extraHours * 10); // ₹24 + ₹10 per extra hour
+    }
 
     const updatedRecord = {
       ...activeRecord,
