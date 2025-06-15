@@ -97,8 +97,8 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
   };
 
   return (
-    <div className="min-h-screen w-full h-full bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="w-full h-full">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+      <div className="max-w-4xl mx-auto">
         <Button 
           variant="ghost" 
           onClick={onBack}
@@ -107,8 +107,8 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
-        <Card className="bg-white shadow-xl w-full h-full rounded-none">
-          <CardHeader className="text-center bg-gradient-to-r from-green-500 to-green-600 text-white rounded-none">
+        <Card className="bg-white shadow-xl">
+          <CardHeader className="text-center bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-lg">
             <div className="flex justify-center mb-4">
               <Clock className="h-16 w-16" />
             </div>
