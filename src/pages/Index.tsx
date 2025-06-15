@@ -16,6 +16,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { CalendarIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useParkingRecords } from "@/hooks/useParkingRecords";
+import { useMonthlyPasses } from "@/hooks/useMonthlyPasses";
 
 const FullscreenToggleButton = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -239,13 +240,15 @@ const Index = () => {
     }
   };
 
-  const addMonthlyPass = (passData: Omit<MonthlyPass, 'id'>) => {
-    const newPass: MonthlyPass = {
-      ...passData,
-      id: Date.now().toString()
-    };
-    setMonthlyPasses(prev => [...prev, newPass]);
-    console.log('New monthly pass created:', newPass);
+  // Update addMonthlyPass to save in database
+  const addMonthlyPass = async (passData: Omit<MonthlyPass, 'id'>) => {
+    try {
+      await addPass(passData);
+      await fetchPasses();
+      console.log('New monthly pass created (DB):', passData);
+    } catch (e) {
+      console.error("Error adding monthly pass to DB", e);
+    }
   };
 
   // Added: Compute entry counts by vehicle type

@@ -9,10 +9,9 @@ import { ArrowLeft, CreditCard, User, Phone, Car, Calendar, Plus, Search } from 
 import { useToast } from "@/hooks/use-toast";
 import { MonthlyPass } from "@/types/parking";
 import { format } from "date-fns";
+import { useMonthlyPasses } from "@/hooks/useMonthlyPasses";
 
 interface MonthlyPassManagementProps {
-  passes: MonthlyPass[];
-  onAddPass: (pass: Omit<MonthlyPass, 'id'>) => void;
   onBack: () => void;
 }
 
@@ -20,7 +19,19 @@ type PassType = "cycle" | "two-wheeler" | "three-wheeler" | "four-wheeler";
 type VehicleType = "cycle" | "two-wheeler" | "three-wheeler" | "four-wheeler";
 type ViewState = 'overview' | 'active' | 'expired' | 'all' | 'create';
 
-const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagementProps) => {
+const MonthlyPassManagement = ({ onBack }: MonthlyPassManagementProps) => {
+  // Use DB-backed hook now
+  const {
+    passes,
+    loading,
+    addPass,
+    updatePass,
+    fetchPasses
+  } = useMonthlyPasses();
+
+  // Keep all useState for form and UI, but remove prop "passes" and "onAddPass"
+  // Replace everywhere "passes" was used with the new "passes" from DB hook
+  // Update handleSubmit to use `addPass` and await fetchPasses afterwards
   const [currentView, setCurrentView] = useState<ViewState>('overview');
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<{
@@ -85,6 +96,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
     return filteredPasses;
   };
 
+  // Below code: only the critical part for add form changes
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -132,7 +145,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
         status: 'active'
       };
 
-      onAddPass(newPass);
+      await addPass(newPass);
+      await fetchPasses();
 
       toast({
         title: "Success!",

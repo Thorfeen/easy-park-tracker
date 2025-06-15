@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      monthly_passes: {
+        Row: {
+          amount: number
+          created_at: string | null
+          end_date: string
+          id: string
+          last_used_at: string | null
+          owner_name: string
+          owner_phone: string
+          pass_type: string
+          start_date: string
+          status: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          end_date: string
+          id?: string
+          last_used_at?: string | null
+          owner_name: string
+          owner_phone: string
+          pass_type: string
+          start_date: string
+          status: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          last_used_at?: string | null
+          owner_name?: string
+          owner_phone?: string
+          pass_type?: string
+          start_date?: string
+          status?: string
+          vehicle_number?: string
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
       parking_records: {
         Row: {
           amount_due: number | null
