@@ -1,3 +1,4 @@
+
 export interface MonthlyPass {
   id: string;
   vehicleNumber: string;
@@ -31,4 +32,5 @@ export interface ParkingRecord {
   status: 'active' | 'completed';
   isPassHolder?: boolean;
   passId?: string;
+  calculationBreakdown?: string[]; // <-- Added for detailed charge breakdowns
 }
