@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDurationFull } from "@/utils/parkingCharges";
+import { Checkbox } from "@/components/ui/checkbox";
 import VehicleTypeSelector from "./vehicle-entry/VehicleTypeSelector";
 import HelmetSelector from "./vehicle-entry/HelmetSelector";
 import PassDetectionBanner from "./vehicle-entry/PassDetectionBanner";
@@ -186,11 +187,12 @@ const VehicleEntry = ({
   const currentTime = format(new Date(), "hh:mm a");
   const currentDate = format(new Date(), "MMMM d, yyyy");
 
+  // Vehicle types array for mapping
   const vehicleTypes = [
-    { value: 'cycle' as const, label: 'Cycle', icon: Bike, description: 'Bicycle only' },
-    { value: 'two-wheeler' as const, label: 'Two Wheeler', icon: Bike, description: 'Motorcycles, Scooters' },
-    { value: 'three-wheeler' as const, label: 'Three Wheeler', icon: Car, description: 'Auto-rickshaws, Three-wheeled vehicles' },
-    { value: 'four-wheeler' as const, label: 'Four Wheeler', icon: Truck, description: 'Cars, SUVs, Trucks' }
+    { value: 'cycle' as const, label: 'Cycle' },
+    { value: 'two-wheeler' as const, label: 'Two-Wheeler' },
+    { value: 'three-wheeler' as const, label: 'Three-Wheeler' },
+    { value: 'four-wheeler' as const, label: 'Four-Wheeler' }
   ];
 
   return (
@@ -249,18 +251,45 @@ const VehicleEntry = ({
                 />
               </div>
 
-              <div className="space-y-4">
-                {/* Vehicle Type heading */}
+              {/* Vehicle Type + Helmet all in one row */}
+              <div>
                 <span className="block font-semibold text-blue-700 mb-2">Vehicle Type:</span>
-                <div className="flex flex-row flex-wrap gap-6 items-stretch">
-                  {/* Vehicle types */}
-                  <VehicleTypeSelector value={vehicleType} onChange={handleVehicleTypeChange} />
-                  {/* Helmet checkbox card */}
-                  <HelmetSelector helmet={helmet} setHelmet={setHelmet} vehicleType={vehicleType} />
+                <div className="flex flex-row gap-6 items-center">
+                  {/* Four vehicle type checkboxes */}
+                  {vehicleTypes.map((type) => (
+                    <div key={type.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={type.value}
+                        checked={vehicleType === type.value}
+                        onCheckedChange={() => handleVehicleTypeChange(type.value)}
+                        aria-checked={vehicleType === type.value}
+                      />
+                      <Label htmlFor={type.value} className="text-sm font-medium cursor-pointer">
+                        {type.label}
+                      </Label>
+                    </div>
+                  ))}
+                  {/* Helmet checkbox */}
+                  <div className="flex items-center space-x-2 ml-8">
+                    <Checkbox
+                      id="helmet"
+                      checked={helmet}
+                      onCheckedChange={() =>
+                        (vehicleType === "cycle" || vehicleType === "two-wheeler")
+                          ? setHelmet(!helmet)
+                          : null
+                      }
+                      disabled={!(vehicleType === "cycle" || vehicleType === "two-wheeler")}
+                    />
+                    <Label htmlFor="helmet" className="text-sm font-medium cursor-pointer">
+                      Helmet
+                    </Label>
+                  </div>
                 </div>
-                {/* Parking Rates row grid */}
-                <ParkingRatesGrid />
               </div>
+
+              {/* Parking Rates row grid */}
+              <ParkingRatesGrid />
 
               <Button
                 type="submit"
