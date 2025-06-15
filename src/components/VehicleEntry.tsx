@@ -85,19 +85,16 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
       value: 'two-wheeler' as const,
       label: 'Two Wheeler',
       icon: Bike,
-      description: 'Motorcycles, Scooters, Bicycles'
     },
     {
       value: 'three-wheeler' as const,
       label: 'Three Wheeler',
       icon: Car,
-      description: 'Auto-rickshaws, Three-wheeled vehicles'
     },
     {
       value: 'four-wheeler' as const,
       label: 'Four Wheeler',
       icon: Truck,
-      description: 'Cars, SUVs, Trucks'
     }
   ];
 
@@ -167,44 +164,42 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <Label className="text-base font-semibold">Vehicle Type *</Label>
                 <RadioGroup
                   value={vehicleType}
-                  onValueChange={(value) => setVehicleType(value as 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
-                  className="space-y-3"
+                  onValueChange={value => setVehicleType(value as 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
+                  className="flex flex-row gap-4"
                 >
                   {vehicleTypes.map((type) => {
                     const Icon = type.icon;
                     return (
-                      <div key={type.value} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <RadioGroupItem value={type.value} id={type.value} />
-                        <div className="flex items-center space-x-3 flex-1">
-                          <Icon className="h-6 w-6 text-gray-600" />
-                          <div className="flex-1">
-                            <Label htmlFor={type.value} className="font-medium cursor-pointer">
-                              {type.label}
-                            </Label>
-                            <p className="text-sm text-gray-500">{type.description}</p>
-                          </div>
-                        </div>
+                      <div
+                        key={type.value}
+                        className={`
+                          flex flex-col items-center justify-center px-4 py-2 rounded-lg border
+                          ${vehicleType === type.value ? 'border-blue-600 bg-blue-50 shadow-sm' : 'border-gray-200 bg-white'}
+                          cursor-pointer transition
+                        `}
+                      >
+                        <RadioGroupItem value={type.value} id={type.value} className="mx-auto mb-2" />
+                        <Icon className="h-7 w-7 text-gray-600 mb-1" />
+                        <Label htmlFor={type.value} className="font-medium text-xs cursor-pointer text-center">{type.label}</Label>
                       </div>
                     );
                   })}
                 </RadioGroup>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Entry Details:</h3>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  <li>• Entry time will be automatically recorded</li>
-                  <li>• Vehicle will be marked as active in the system</li>
-                  {detectedPass ? (
-                    <li className="text-green-600 font-medium">• Free parking for monthly pass holders</li>
-                  ) : (
-                    <li>• Parking charges: ₹24 for first 6 hours, then ₹10 per hour</li>
-                  )}
-                </ul>
+              {/* Show parking charges info */}
+              <div className="p-4 rounded-lg text-center bg-gray-50 mb-2">
+                {detectedPass ? (
+                  <span className="text-green-700 font-semibold">Free parking for monthly pass holders</span>
+                ) : (
+                  <span className="font-medium text-gray-700">
+                    Parking charges: ₹24 for first 6 hours, then ₹10 per hour
+                  </span>
+                )}
               </div>
 
               <Button
