@@ -1,13 +1,12 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, Car, Clock, ScanLine, Bike, Truck, CreditCard } from "lucide-react";
+import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMobileDetection } from "@/hooks/use-mobile-detection";
-import VehicleScanner from "./VehicleScanner";
 
 interface VehicleEntryProps {
   onAddEntry: (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
@@ -19,10 +18,8 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleType, setVehicleType] = useState<'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const { toast } = useToast();
-  const isMobile = useMobileDetection();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,31 +77,6 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
     setVehicleNumber(value);
     checkForPass(value);
   };
-
-  const handleScanResultWithPassCheck = (scannedNumber: string) => {
-    setVehicleNumber(scannedNumber);
-    setShowScanner(false);
-    checkForPass(scannedNumber);
-    toast({
-      title: "Scan Complete!",
-      description: `Vehicle number ${scannedNumber} detected`,
-    });
-  };
-
-  const handleScanClick = () => {
-    setShowScanner(true);
-  };
-
-  if (showScanner) {
-    return (
-      <VehicleScanner
-        onScanResult={handleScanResultWithPassCheck}
-        onBack={() => setShowScanner(false)}
-        title="Scan Vehicle Entry"
-        description="Scan license plate for new vehicle arrival"
-      />
-    );
-  }
 
   const currentTime = new Date().toLocaleString();
 
@@ -176,56 +148,20 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
               </div>
             )}
 
-            {isMobile && (
-              <div className="mb-6">
-                <Button
-                  onClick={handleScanClick}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 text-lg font-semibold"
-                >
-                  <ScanLine className="h-6 w-6 mr-2" />
-                  Scan License Plate
-                </Button>
-                <p className="text-center text-sm text-gray-500 mt-2">
-                  Recommended for quick entry
-                </p>
-                
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">Or enter manually</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="vehicleNumber" className="text-base font-semibold">
                   Vehicle Number *
                 </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="vehicleNumber"
-                    type="text"
-                    value={vehicleNumber}
-                    onChange={handleVehicleNumberChange}
-                    placeholder="Enter vehicle number (e.g., ABC-1234)"
-                    className="text-lg py-3 px-4 flex-1"
-                    disabled={isSubmitting}
-                  />
-                  {!isMobile && (
-                    <Button
-                      type="button"
-                      onClick={handleScanClick}
-                      variant="outline"
-                      className="px-4"
-                    >
-                      <ScanLine className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                <Input
+                  id="vehicleNumber"
+                  type="text"
+                  value={vehicleNumber}
+                  onChange={handleVehicleNumberChange}
+                  placeholder="Enter vehicle number (e.g., ABC-1234)"
+                  className="text-lg py-3 px-4"
+                  disabled={isSubmitting}
+                />
                 <p className="text-sm text-gray-600">
                   Enter the complete vehicle number including any letters and numbers
                 </p>

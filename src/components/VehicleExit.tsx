@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, Car, AlertCircle, ScanLine, IndianRupee, CreditCard } from "lucide-react";
+import { ArrowLeft, Clock, Car, IndianRupee, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ParkingRecord } from "@/types/parking";
-import { useMobileDetection } from "@/hooks/use-mobile-detection";
-import VehicleScanner from "./VehicleScanner";
 
 interface VehicleExitProps {
   onProcessExit: (vehicleNumber: string) => ParkingRecord | null;
@@ -22,10 +20,8 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
   const [exitRecord, setExitRecord] = useState<ParkingRecord | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [vehicleNotFound, setVehicleNotFound] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const { toast } = useToast();
-  const isMobile = useMobileDetection();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,36 +82,11 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
     checkForPass(value);
   };
 
-  const handleScanResultWithPassCheck = (scannedNumber: string) => {
-    setVehicleNumber(scannedNumber);
-    setShowScanner(false);
-    checkForPass(scannedNumber);
-    toast({
-      title: "Scan Complete!",
-      description: `Vehicle number ${scannedNumber} detected`,
-    });
-  };
-
-  const handleScanClick = () => {
-    setShowScanner(true);
-  };
-
   const handleNewSearch = () => {
     setVehicleNumber("");
     setExitRecord(null);
     setVehicleNotFound(false);
   };
-
-  if (showScanner) {
-    return (
-      <VehicleScanner
-        onScanResult={handleScanResultWithPassCheck}
-        onBack={() => setShowScanner(false)}
-        title="Scan Vehicle Exit"
-        description="Scan license plate to process vehicle departure"
-      />
-    );
-  }
 
   const formatDuration = (hours: number) => {
     if (hours === 1) return "1 hour";
@@ -163,56 +134,20 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
                   </div>
                 )}
 
-                {isMobile && (
-                  <div className="mb-6">
-                    <Button
-                      onClick={handleScanClick}
-                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 text-lg font-semibold"
-                    >
-                      <ScanLine className="h-6 w-6 mr-2" />
-                      Scan License Plate
-                    </Button>
-                    <p className="text-center text-sm text-gray-500 mt-2">
-                      Recommended for quick processing
-                    </p>
-                    
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-gray-500">Or enter manually</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <form onSubmit={handleSearch}>
                   <div className="space-y-2">
                     <Label htmlFor="vehicleNumber" className="text-base font-semibold">
                       Vehicle Number *
                     </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="vehicleNumber"
-                        type="text"
-                        value={vehicleNumber}
-                        onChange={handleVehicleNumberChange}
-                        placeholder="Enter vehicle number to process exit"
-                        className="text-lg py-3 px-4 flex-1"
-                        disabled={isProcessing}
-                      />
-                      {!isMobile && (
-                        <Button
-                          type="button"
-                          onClick={handleScanClick}
-                          variant="outline"
-                          className="px-4"
-                        >
-                          <ScanLine className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+                    <Input
+                      id="vehicleNumber"
+                      type="text"
+                      value={vehicleNumber}
+                      onChange={handleVehicleNumberChange}
+                      placeholder="Enter vehicle number to process exit"
+                      className="text-lg py-3 px-4"
+                      disabled={isProcessing}
+                    />
                   </div>
 
                   <Button
