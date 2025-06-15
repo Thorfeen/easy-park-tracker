@@ -106,7 +106,7 @@ export function useParkingRecords() {
 
     const { data, error } = await supabase
       .from("parking_records")
-      .insert([toInsert])
+      .insert([toInsert]) // fix: wrap with array to insert one row
       .select()
       .single();
 

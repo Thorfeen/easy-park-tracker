@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MonthlyPass } from "@/types/parking";
@@ -32,6 +31,7 @@ function toAppPass(raw: RawPass): MonthlyPass {
     amount: Number(raw.amount),
     status: raw.status as MonthlyPass["status"],
     lastUsedAt: raw.last_used_at ? new Date(raw.last_used_at) : undefined,
+    createdAt: raw.created_at ? new Date(raw.created_at) : undefined,
   };
 }
 

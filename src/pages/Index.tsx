@@ -276,47 +276,70 @@ const Index = () => {
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
 
-  function getRevenueForDate(records: ParkingRecord[], date: Date) {
+  // --- Monthly Pass Sales Revenue ---
+  function getPassSalesForDate(passes: MonthlyPass[], date: Date) {
     const dateStr = getDateString(date);
-    return records
-      .filter(r => r.status === "completed" && r.exitTime && getDateString(r.exitTime) === dateStr && !r.isPassHolder)
-      .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
-  }
-  function getRevenueForPeriod(records: ParkingRecord[], start: Date, end: Date) {
-    return records
-      .filter(r => r.status === "completed" && r.exitTime && r.exitTime >= start && r.exitTime <= end && !r.isPassHolder)
-      .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
+    return passes
+      .filter(pass => pass.createdAt && getDateString(pass.createdAt) === dateStr)
+      .reduce((sum, pass) => sum + (pass.amount || 0), 0);
   }
 
+  function getPassSalesForPeriod(passes: MonthlyPass[], start: Date, end: Date) {
+    return passes
+      .filter(pass => pass.createdAt && pass.createdAt >= start && pass.createdAt <= end)
+      .reduce((sum, pass) => sum + (pass.amount || 0), 0);
+  }
+
+  // --- Old Parking Revenue functions now include pass sales
+  function getRevenueForDate(records: ParkingRecord[], passes: MonthlyPass[], date: Date) {
+    const dateStr = getDateString(date);
+    const parking = records
+      .filter(r => r.status === "completed" && r.exitTime && getDateString(r.exitTime) === dateStr && !r.isPassHolder)
+      .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
+    const passSales = getPassSalesForDate(passes, date);
+    return parking + passSales;
+  }
+
+  function getRevenueForPeriod(records: ParkingRecord[], passes: MonthlyPass[], start: Date, end: Date) {
+    const parking = records
+      .filter(r => r.status === "completed" && r.exitTime && r.exitTime >= start && r.exitTime <= end && !r.isPassHolder)
+      .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
+    const passSales = getPassSalesForPeriod(passes, start, end);
+    return parking + passSales;
+  }
+
+  // --- Revenue Variables ---
   const [selectedRevenueDate, setSelectedRevenueDate] = useState<Date>(today);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Today's Revenue
-  const todaysRevenue = getRevenueForDate(parkingRecords, today);
+  const todaysRevenue = getRevenueForDate(parkingRecords, monthlyPasses, today);
 
   // Yesterday's Revenue
-  const yesterdaysRevenue = getRevenueForDate(parkingRecords, yesterday);
+  const yesterdaysRevenue = getRevenueForDate(parkingRecords, monthlyPasses, yesterday);
 
-  // Last 7 Days Revenue (including today) -- period is 6 days before now to end of today
+  // Last 7 Days Revenue (including today)
   const start7Days = new Date(today);
   start7Days.setDate(today.getDate() - 6);
   start7Days.setHours(0, 0, 0, 0);
   const endOfToday = new Date(today);
   endOfToday.setHours(23, 59, 59, 999);
-  const last7DaysRevenue = getRevenueForPeriod(parkingRecords, start7Days, endOfToday);
+  const last7DaysRevenue = getRevenueForPeriod(parkingRecords, monthlyPasses, start7Days, endOfToday);
 
   // Current Month Revenue
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-  const monthlyRevenue = getRevenueForPeriod(parkingRecords, firstDayOfMonth, lastDayOfMonth);
+  const monthlyRevenue = getRevenueForPeriod(parkingRecords, monthlyPasses, firstDayOfMonth, lastDayOfMonth);
 
-  // Monthly Pass Sales for current month
+  // Monthly Pass Sales (display-only, not included in stats card; if desired)
   const monthlyPassSales = monthlyPasses.filter(pass =>
-    pass.startDate >= firstDayOfMonth && pass.startDate <= lastDayOfMonth
+    pass.createdAt &&
+    pass.createdAt >= firstDayOfMonth &&
+    pass.createdAt <= lastDayOfMonth
   ).reduce((sum, pass) => sum + (pass.amount || 0), 0);
 
   // Revenue for selected date
-  const selectedDateRevenue = getRevenueForDate(parkingRecords, selectedRevenueDate);
+  const selectedDateRevenue = getRevenueForDate(parkingRecords, monthlyPasses, selectedRevenueDate);
   const isRevenueToday = isSameDay(selectedRevenueDate, today);
 
   const renderCurrentView = () => {
@@ -505,8 +528,8 @@ const Index = () => {
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">
                       {isRevenueToday
-                        ? "From completed exits today"
-                        : `Completed exits on ${format(selectedRevenueDate, "MMM dd, yyyy")}`}
+                        ? "Includes completed exits and pass sales today"
+                        : `Includes completed exits and pass sales on ${format(selectedRevenueDate, "MMM dd, yyyy")}`}
                     </p>
                     <div className="space-y-1 mt-1 text-xs">
                       <div className="flex items-center justify-between">
