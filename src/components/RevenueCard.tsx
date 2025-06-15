@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,26 +7,37 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { IndianRupee, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { ParkingRecord } from "@/types/parking";
+import { ParkingRecord, MonthlyPass } from "@/types/parking";
 
 interface RevenueCardProps {
   records: ParkingRecord[];
+  monthlyPasses: MonthlyPass[];
 }
 
-const RevenueCard = ({ records }: RevenueCardProps) => {
+const RevenueCard = ({ records, monthlyPasses }: RevenueCardProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const getRevenueForDate = (date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
-    
-    return records
+    // Sum completed record revenues
+    const parkingRevenue = records
       .filter(record => {
         if (record.status !== 'completed' || !record.exitTime) return false;
         const recordDate = format(record.exitTime, 'yyyy-MM-dd');
         return recordDate === dateString;
       })
       .reduce((sum, record) => sum + (record.amountDue || 0), 0);
+
+    // Sum passes started on this date (pass creation = start date)
+    const passRevenue = monthlyPasses
+      .filter(pass => {
+        const startDateString = pass.startDate ? format(pass.startDate, 'yyyy-MM-dd') : '';
+        return startDateString === dateString;
+      })
+      .reduce((sum, pass) => sum + (pass.amount || 0), 0);
+
+    return parkingRevenue + passRevenue;
   };
 
   const selectedDateRevenue = getRevenueForDate(selectedDate);
@@ -75,7 +87,9 @@ const RevenueCard = ({ records }: RevenueCardProps) => {
           </Popover>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          {isToday ? "From completed exits today" : `From completed exits on ${format(selectedDate, "MMM dd")}`}
+          {isToday
+            ? "From completed exits and pass sales today"
+            : `From completed exits and pass sales on ${format(selectedDate, "MMM dd")}`}
         </p>
       </CardContent>
     </Card>
@@ -83,3 +97,4 @@ const RevenueCard = ({ records }: RevenueCardProps) => {
 };
 
 export default RevenueCard;
+

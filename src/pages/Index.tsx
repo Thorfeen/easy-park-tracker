@@ -47,13 +47,21 @@ const Index = () => {
 
   const isMobile = useMobileDetection();
 
+  // Calculate total monthly pass revenue (sum of all passes' amount)
+  const monthlyPassRevenue = monthlyPasses.reduce((sum, pass) => sum + (pass.amount || 0), 0);
+
   // The following aggregation logic remains mostly unchanged, but now references the fetched records
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
   const activeTwoWheelers = activeVehicles.filter(record => record.vehicleType === 'two-wheeler');
   const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
   const activeFourWheelers = activeVehicles.filter(record => record.vehicleType === 'four-wheeler');
   const completedRecords = parkingRecords.filter(record => record.status === 'completed');
-  const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
+
+  // Now sum both sources for total revenue
+  const totalRevenue =
+    completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0) +
+    monthlyPassRevenue;
+
   const activePasses = monthlyPasses.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const passHolderVehicles = activeVehicles.filter(record => record.isPassHolder);
 
@@ -229,7 +237,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
-                <RevenueCard records={parkingRecords} />
+                <RevenueCard records={parkingRecords} monthlyPasses={monthlyPasses} />
               </div>
 
               {/* Action Cards */}
