@@ -219,7 +219,6 @@ const VehicleEntry = ({
             {/* Date and Time in single line */}
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-blue-700">
-                {/* Single line: Date (calendar icon+label+value), then Time (clock icon+label+value) */}
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
                   <span className="font-semibold">Date:</span>
@@ -235,8 +234,23 @@ const VehicleEntry = ({
             <PassDetectionBanner detectedPass={detectedPass} passTypeMismatch={passTypeMismatch} />
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Vehicle Number Entry Box */}
+              <div>
+                <Label htmlFor="vehicle-number" className="text-blue-700 font-semibold mb-1 block">
+                  Vehicle Number:
+                </Label>
+                <Input
+                  id="vehicle-number"
+                  value={vehicleNumber}
+                  onChange={handleVehicleNumberChange}
+                  placeholder="Enter vehicle number"
+                  className="mb-4 border-blue-300 focus:ring-blue-500 focus:border-blue-500 text-base"
+                  autoComplete="off"
+                />
+              </div>
+
               <div className="space-y-4">
-                {/* Updated Vehicle Type heading */}
+                {/* Vehicle Type heading */}
                 <span className="block font-semibold text-blue-700 mb-2">Vehicle Type:</span>
                 <div className="flex flex-row flex-wrap gap-6 items-stretch">
                   {/* Vehicle types */}
