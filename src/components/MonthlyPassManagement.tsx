@@ -78,6 +78,13 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
   const activePasses = passes.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const expiredPasses = passes.filter(pass => pass.status === 'expired' || pass.endDate <= new Date());
 
+  // Insert viewTitle variable in main scope for visibility everywhere in component
+  const viewTitle = {
+    active: 'Active Passes',
+    expired: 'Expired Passes',
+    all: 'All Passes'
+  }[currentView] || 'Passes';
+
   // --- Recently Used Passes logic ---
   // For each active pass, find the most recent usage (entry or exit) in parkingRecords
   function getLatestUsageForPass(passId: string) {
@@ -381,11 +388,6 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
 
   const renderPassList = () => {
     const filteredPasses = getFilteredPasses();
-    const viewTitle = {
-      active: 'Active Passes',
-      expired: 'Expired Passes',
-      all: 'All Passes'
-    }[currentView] || 'Passes';
 
     return (
       <div className="space-y-6">
@@ -518,7 +520,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
             {(currentView === 'active' || currentView === 'expired' || currentView === 'all') && getFilteredPasses().length === 0 && (
               <div className="text-center py-8">
                 <CreditCard className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">No Passes Found</h3>
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">No {viewTitle} Found</h3>
                 <p className="text-gray-500">
                   {searchTerm ? 'No passes match your search criteria.' : `No ${viewTitle.toLowerCase()} available.`}
                 </p>
