@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import VehicleEntry from "@/components/VehicleEntry";
 import VehicleExit from "@/components/VehicleExit";
 import ParkingRecords from "@/components/ParkingRecords";
-import { Car, Clock, History, DollarSign, ScanLine } from "lucide-react";
+import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike } from "lucide-react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import RevenueCard from "@/components/RevenueCard";
 
 export interface ParkingRecord {
   id: string;
   vehicleNumber: string;
+  vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler';
   entryTime: Date;
   exitTime?: Date;
   duration?: number;
@@ -25,13 +26,17 @@ const Index = () => {
   const isMobile = useMobileDetection();
 
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
+  const activeTwoWheelers = activeVehicles.filter(record => record.vehicleType === 'two-wheeler');
+  const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
+  const activeFourWheelers = activeVehicles.filter(record => record.vehicleType === 'four-wheeler');
   const completedRecords = parkingRecords.filter(record => record.status === 'completed');
   const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
 
-  const addVehicleEntry = (vehicleNumber: string) => {
+  const addVehicleEntry = (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
     const newRecord: ParkingRecord = {
       id: Date.now().toString(),
       vehicleNumber: vehicleNumber.toUpperCase(),
+      vehicleType,
       entryTime: new Date(),
       status: 'active'
     };
@@ -99,7 +104,29 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-blue-600">{activeVehicles.length}</div>
-                    <p className="text-xs text-muted-foreground">Currently parked</p>
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1">
+                          <Bike className="h-3 w-3" />
+                          Two Wheelers
+                        </span>
+                        <span className="font-medium">{activeTwoWheelers.length}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1">
+                          <Car className="h-3 w-3" />
+                          Three Wheelers
+                        </span>
+                        <span className="font-medium">{activeThreeWheelers.length}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1">
+                          <Truck className="h-3 w-3" />
+                          Four Wheelers
+                        </span>
+                        <span className="font-medium">{activeFourWheelers.length}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -178,22 +205,76 @@ const Index = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {activeVehicles.slice(0, 6).map(record => (
-                        <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-semibold">{record.vehicleNumber}</p>
-                            <p className="text-sm text-gray-600">
-                              Entry: {record.entryTime.toLocaleTimeString()}
-                            </p>
+                    <div className="space-y-4">
+                      {activeTwoWheelers.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                            <Bike className="h-4 w-4" />
+                            Two Wheelers ({activeTwoWheelers.length})
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {activeTwoWheelers.slice(0, 3).map(record => (
+                              <div key={record.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                                <div>
+                                  <p className="font-semibold text-sm">{record.vehicleNumber}</p>
+                                  <p className="text-xs text-gray-600">
+                                    {record.entryTime.toLocaleTimeString()}
+                                  </p>
+                                </div>
+                                <Badge variant="secondary" className="text-xs">Active</Badge>
+                              </div>
+                            ))}
                           </div>
-                          <Badge variant="secondary">Active</Badge>
                         </div>
-                      ))}
+                      )}
+
+                      {activeThreeWheelers.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                            <Car className="h-4 w-4" />
+                            Three Wheelers ({activeThreeWheelers.length})
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {activeThreeWheelers.slice(0, 3).map(record => (
+                              <div key={record.id} className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                                <div>
+                                  <p className="font-semibold text-sm">{record.vehicleNumber}</p>
+                                  <p className="text-xs text-gray-600">
+                                    {record.entryTime.toLocaleTimeString()}
+                                  </p>
+                                </div>
+                                <Badge variant="secondary" className="text-xs">Active</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeFourWheelers.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                            <Truck className="h-4 w-4" />
+                            Four Wheelers ({activeFourWheelers.length})
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {activeFourWheelers.slice(0, 3).map(record => (
+                              <div key={record.id} className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
+                                <div>
+                                  <p className="font-semibold text-sm">{record.vehicleNumber}</p>
+                                  <p className="text-xs text-gray-600">
+                                    {record.entryTime.toLocaleTimeString()}
+                                  </p>
+                                </div>
+                                <Badge variant="secondary" className="text-xs">Active</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {activeVehicles.length > 6 && (
+                    {activeVehicles.length > 9 && (
                       <p className="text-center text-gray-500 mt-4">
-                        And {activeVehicles.length - 6} more...
+                        And {activeVehicles.length - 9} more...
                       </p>
                     )}
                   </CardContent>
