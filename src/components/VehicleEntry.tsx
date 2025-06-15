@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -117,7 +116,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <Button 
           variant="ghost" 
           onClick={onBack}
@@ -186,19 +185,25 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
                 <RadioGroup
                   value={vehicleType}
                   onValueChange={(value) => setVehicleType(value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
-                  className="flex flex-row gap-4"
+                  className="flex flex-row gap-6 flex-wrap"
                 >
                   {vehicleTypes.map((type) => {
                     const Icon = type.icon;
                     return (
-                      <div key={type.value} className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer min-w-[110px]">
+                      <div
+                        key={type.value}
+                        className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer w-36 h-40 transition-all duration-200 gap-2"
+                        style={{ minWidth: '144px', maxWidth: '144px', minHeight: '160px', maxHeight: '160px' }}
+                      >
                         <RadioGroupItem value={type.value} id={type.value} />
                         <div className="flex flex-col items-center mt-2">
-                          <Icon className="h-6 w-6 text-gray-600 mb-1" />
+                          <Icon className="h-8 w-8 text-gray-600 mb-1" />
                           <Label htmlFor={type.value} className="font-medium cursor-pointer">
                             {type.label}
                           </Label>
-                          <p className="text-xs text-gray-500 text-center">{type.description}</p>
+                          <p className="text-xs text-gray-500 text-center break-words">
+                            {type.description}
+                          </p>
                         </div>
                       </div>
                     );
