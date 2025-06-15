@@ -13,7 +13,7 @@ import { ParkingRecord, MonthlyPass } from "@/types/parking";
 import { calculateParkingCharges } from "@/utils/parkingCharges";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const FullscreenToggleButton = () => {
@@ -468,7 +468,7 @@ const Index = () => {
                               !selectedRevenueDate && "text-muted-foreground"
                             )}
                           >
-                            <CalendarIcon className="mr-2 h-3 w-3" />
+                            <ChevronDown className="mr-2 h-3 w-3" />
                             {isRevenueToday
                               ? "Today"
                               : format(selectedRevenueDate, "MMM dd, yyyy")}
