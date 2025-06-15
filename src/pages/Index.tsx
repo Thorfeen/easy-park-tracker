@@ -37,7 +37,7 @@ const FullscreenToggleButton = () => {
   return (
     <button
       onClick={handleToggleFullscreen}
-      className="absolute top-4 right-16 z-50 p-2 bg-white shadow rounded-full hover:bg-gray-100 transition-colors"
+      className="absolute top-4 right-24 z-40 p-2 bg-white shadow rounded-full hover:bg-gray-100 transition-colors"
       title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
       aria-label="Toggle Fullscreen"
       type="button"
