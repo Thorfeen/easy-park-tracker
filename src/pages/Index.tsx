@@ -125,76 +125,76 @@ const Index = () => {
         return <MonthlyPassManagement passes={monthlyPasses} onAddPass={addMonthlyPass} onBack={() => setCurrentView('dashboard')} />;
       default:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-blue-900 mb-2">Railway Parking Management</h1>
-                <p className="text-lg text-blue-700">Efficient Vehicle Parking Management System</p>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">Railway Parking Management</h1>
+                <p className="text-lg text-gray-600">Efficient Vehicle Parking Management System</p>
               </div>
 
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-blue-200">
+                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-blue-700">Active Vehicles</CardTitle>
+                    <CardTitle className="text-sm font-medium">Active Vehicles</CardTitle>
                     <Car className="h-4 w-4 text-blue-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-blue-600">{activeVehicles.length}</div>
                     <div className="space-y-1 mt-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1 text-blue-600">
+                        <span className="flex items-center gap-1">
                           <Bike className="h-3 w-3" />
                           Two Wheelers
                         </span>
-                        <span className="font-medium text-blue-800">{activeTwoWheelers.length}</span>
+                        <span className="font-medium">{activeTwoWheelers.length}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1 text-blue-600">
+                        <span className="flex items-center gap-1">
                           <Car className="h-3 w-3" />
                           Three Wheelers
                         </span>
-                        <span className="font-medium text-blue-800">{activeThreeWheelers.length}</span>
+                        <span className="font-medium">{activeThreeWheelers.length}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1 text-blue-600">
+                        <span className="flex items-center gap-1">
                           <Truck className="h-3 w-3" />
                           Four Wheelers
                         </span>
-                        <span className="font-medium text-blue-800">{activeFourWheelers.length}</span>
+                        <span className="font-medium">{activeFourWheelers.length}</span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-blue-200">
+                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-blue-700">Monthly Passes</CardTitle>
-                    <CreditCard className="h-4 w-4 text-blue-600" />
+                    <CardTitle className="text-sm font-medium">Monthly Passes</CardTitle>
+                    <CreditCard className="h-4 w-4 text-purple-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">{activePasses.length}</div>
+                    <div className="text-2xl font-bold text-purple-600">{activePasses.length}</div>
                     <div className="space-y-1 mt-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-blue-600">Pass Holders Parked</span>
-                        <span className="font-medium text-blue-800">{passHolderVehicles.length}</span>
+                        <span>Pass Holders Parked</span>
+                        <span className="font-medium">{passHolderVehicles.length}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-blue-600">Total Passes</span>
-                        <span className="font-medium text-blue-800">{monthlyPasses.length}</span>
+                        <span>Total Passes</span>
+                        <span className="font-medium">{monthlyPasses.length}</span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-blue-200">
+                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-blue-700">Total Records</CardTitle>
-                    <History className="h-4 w-4 text-blue-600" />
+                    <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+                    <History className="h-4 w-4 text-green-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">{parkingRecords.length}</div>
-                    <p className="text-xs text-blue-500">All time entries</p>
+                    <div className="text-2xl font-bold text-green-600">{parkingRecords.length}</div>
+                    <p className="text-xs text-muted-foreground">All time entries</p>
                   </CardContent>
                 </Card>
 
@@ -213,55 +213,55 @@ const Index = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <Button variant="secondary" className="w-full bg-white text-blue-600 hover:bg-blue-50">
+                    <Button variant="secondary" className="w-full">
                       {isMobile ? "Scan New Entry" : "Add New Entry"}
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
+                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('exit')}>
                   <CardHeader className="text-center">
                     {isMobile ? <ScanLine className="h-12 w-12 mx-auto mb-4" /> : <Clock className="h-12 w-12 mx-auto mb-4" />}
                     <CardTitle className="text-xl">Vehicle Exit</CardTitle>
-                    <CardDescription className="text-blue-100">
+                    <CardDescription className="text-green-100">
                       Process vehicle departure
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <Button variant="secondary" className="w-full bg-white text-blue-600 hover:bg-blue-50">
+                    <Button variant="secondary" className="w-full">
                       {isMobile ? "Scan Process Exit" : "Process Exit"}
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-700 to-blue-800 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
+                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('passes')}>
                   <CardHeader className="text-center">
                     <CreditCard className="h-12 w-12 mx-auto mb-4" />
                     <CardTitle className="text-xl">Monthly Passes</CardTitle>
-                    <CardDescription className="text-blue-100">
+                    <CardDescription className="text-purple-100">
                       Manage monthly passes
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <Button variant="secondary" className="w-full bg-white text-blue-600 hover:bg-blue-50">
+                    <Button variant="secondary" className="w-full">
                       Manage Passes
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-400 to-blue-500 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
+                <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer"
                       onClick={() => setCurrentView('records')}>
                   <CardHeader className="text-center">
                     <History className="h-12 w-12 mx-auto mb-4" />
                     <CardTitle className="text-xl">View Records</CardTitle>
-                    <CardDescription className="text-blue-100">
+                    <CardDescription className="text-orange-100">
                       Check parking history
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <Button variant="secondary" className="w-full bg-white text-blue-600 hover:bg-blue-50">
+                    <Button variant="secondary" className="w-full">
                       View History
                     </Button>
                   </CardContent>
@@ -270,9 +270,9 @@ const Index = () => {
 
               {/* Active Vehicles Preview */}
               {activeVehicles.length > 0 && (
-                <Card className="bg-white shadow-lg border-blue-200">
+                <Card className="bg-white shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-blue-800">
+                    <CardTitle className="flex items-center gap-2">
                       <Car className="h-5 w-5" />
                       Currently Parked Vehicles
                     </CardTitle>
@@ -281,23 +281,23 @@ const Index = () => {
                     <div className="space-y-4">
                       {activeTwoWheelers.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-sm text-blue-700 mb-2 flex items-center gap-2">
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
                             <Bike className="h-4 w-4" />
                             Two Wheelers ({activeTwoWheelers.length})
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                             {activeTwoWheelers.slice(0, 3).map(record => (
-                              <div key={record.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
+                              <div key={record.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
                                 <div>
-                                  <p className="font-semibold text-sm text-blue-800">{record.vehicleNumber}</p>
-                                  <p className="text-xs text-blue-600">
+                                  <p className="font-semibold text-sm">{record.vehicleNumber}</p>
+                                  <p className="text-xs text-gray-600">
                                     {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">Active</Badge>
+                                  <Badge variant="secondary" className="text-xs">Active</Badge>
                                   {record.isPassHolder && (
-                                    <Badge variant="default" className="text-xs bg-blue-600 text-white">Pass</Badge>
+                                    <Badge variant="default" className="text-xs bg-purple-600">Pass</Badge>
                                   )}
                                 </div>
                               </div>
@@ -308,23 +308,23 @@ const Index = () => {
 
                       {activeThreeWheelers.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-sm text-blue-700 mb-2 flex items-center gap-2">
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
                             <Car className="h-4 w-4" />
                             Three Wheelers ({activeThreeWheelers.length})
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                             {activeThreeWheelers.slice(0, 3).map(record => (
-                              <div key={record.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
+                              <div key={record.id} className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
                                 <div>
-                                  <p className="font-semibold text-sm text-blue-800">{record.vehicleNumber}</p>
-                                  <p className="text-xs text-blue-600">
+                                  <p className="font-semibold text-sm">{record.vehicleNumber}</p>
+                                  <p className="text-xs text-gray-600">
                                     {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">Active</Badge>
+                                  <Badge variant="secondary" className="text-xs">Active</Badge>
                                   {record.isPassHolder && (
-                                    <Badge variant="default" className="text-xs bg-blue-600 text-white">Pass</Badge>
+                                    <Badge variant="default" className="text-xs bg-purple-600">Pass</Badge>
                                   )}
                                 </div>
                               </div>
@@ -335,23 +335,23 @@ const Index = () => {
 
                       {activeFourWheelers.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-sm text-blue-700 mb-2 flex items-center gap-2">
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
                             <Truck className="h-4 w-4" />
                             Four Wheelers ({activeFourWheelers.length})
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                             {activeFourWheelers.slice(0, 3).map(record => (
-                              <div key={record.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
+                              <div key={record.id} className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
                                 <div>
-                                  <p className="font-semibold text-sm text-blue-800">{record.vehicleNumber}</p>
-                                  <p className="text-xs text-blue-600">
+                                  <p className="font-semibold text-sm">{record.vehicleNumber}</p>
+                                  <p className="text-xs text-gray-600">
                                     {record.entryTime.toLocaleTimeString()}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">Active</Badge>
+                                  <Badge variant="secondary" className="text-xs">Active</Badge>
                                   {record.isPassHolder && (
-                                    <Badge variant="default" className="text-xs bg-blue-600 text-white">Pass</Badge>
+                                    <Badge variant="default" className="text-xs bg-purple-600">Pass</Badge>
                                   )}
                                 </div>
                               </div>
@@ -361,7 +361,7 @@ const Index = () => {
                       )}
                     </div>
                     {activeVehicles.length > 9 && (
-                      <p className="text-center text-blue-500 mt-4">
+                      <p className="text-center text-gray-500 mt-4">
                         And {activeVehicles.length - 9} more...
                       </p>
                     )}

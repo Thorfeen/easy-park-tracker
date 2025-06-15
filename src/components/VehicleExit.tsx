@@ -123,24 +123,24 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
       <div className="max-w-2xl mx-auto">
         <Button 
           variant="ghost" 
           onClick={onBack}
-          className="mb-6 hover:bg-white/50 text-blue-700"
+          className="mb-6 hover:bg-white/50"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
 
-        <Card className="bg-white shadow-xl border-blue-200">
-          <CardHeader className="text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
+        <Card className="bg-white shadow-xl">
+          <CardHeader className="text-center bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-lg">
             <div className="flex justify-center mb-4">
               <Clock className="h-16 w-16" />
             </div>
             <CardTitle className="text-2xl">Vehicle Exit</CardTitle>
-            <CardDescription className="text-blue-100">
+            <CardDescription className="text-green-100">
               Process vehicle departure and calculate charges
             </CardDescription>
           </CardHeader>
@@ -149,8 +149,8 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
             {!exitRecord && !vehicleNotFound && (
               <div className="space-y-6">
                 {detectedPass && (
-                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-2 text-blue-700 mb-2">
+                  <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-2 text-purple-700 mb-2">
                       <CreditCard className="h-5 w-5" />
                       <span className="font-semibold">Monthly Pass Detected!</span>
                     </div>
@@ -158,7 +158,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
                       <p><strong>Owner:</strong> {detectedPass.ownerName}</p>
                       <p><strong>Pass Type:</strong> {detectedPass.passType.toUpperCase()}</p>
                       <p><strong>Valid Until:</strong> {detectedPass.endDate.toLocaleDateString()}</p>
-                      <p className="text-blue-600 font-medium">✓ No charges for valid pass holders</p>
+                      <p className="text-green-600 font-medium">✓ No charges for valid pass holders</p>
                     </div>
                   </div>
                 )}
@@ -172,16 +172,16 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
                       <ScanLine className="h-6 w-6 mr-2" />
                       Scan License Plate
                     </Button>
-                    <p className="text-center text-sm text-blue-500 mt-2">
+                    <p className="text-center text-sm text-gray-500 mt-2">
                       Recommended for quick processing
                     </p>
                     
                     <div className="relative my-6">
                       <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-blue-200" />
+                        <span className="w-full border-t" />
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-blue-500">Or enter manually</span>
+                        <span className="bg-white px-2 text-gray-500">Or enter manually</span>
                       </div>
                     </div>
                   </div>
@@ -189,7 +189,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
 
                 <form onSubmit={handleSearch}>
                   <div className="space-y-2">
-                    <Label htmlFor="vehicleNumber" className="text-base font-semibold text-blue-800">
+                    <Label htmlFor="vehicleNumber" className="text-base font-semibold">
                       Vehicle Number *
                     </Label>
                     <div className="flex gap-2">
@@ -199,7 +199,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
                         value={vehicleNumber}
                         onChange={handleVehicleNumberChange}
                         placeholder="Enter vehicle number to process exit"
-                        className="text-lg py-3 px-4 flex-1 border-blue-200 focus:border-blue-500"
+                        className="text-lg py-3 px-4 flex-1"
                         disabled={isProcessing}
                       />
                       {!isMobile && (
@@ -207,7 +207,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
                           type="button"
                           onClick={handleScanClick}
                           variant="outline"
-                          className="px-4 border-blue-200 text-blue-600 hover:bg-blue-50"
+                          className="px-4"
                         >
                           <ScanLine className="h-4 w-4" />
                         </Button>
@@ -217,7 +217,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
 
                   <Button
                     type="submit"
-                    className="w-full mt-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 text-lg font-semibold"
+                    className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 text-lg font-semibold"
                     disabled={isProcessing}
                   >
                     {isProcessing ? "Processing..." : "Process Exit"}
@@ -229,24 +229,24 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
             {exitRecord && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <Car className="h-16 w-16 mx-auto text-blue-600 mb-2" />
-                  <h3 className="text-xl font-semibold text-blue-600">Exit Processed Successfully!</h3>
+                  <Car className="h-16 w-16 mx-auto text-green-600 mb-2" />
+                  <h3 className="text-xl font-semibold text-green-600">Exit Processed Successfully!</h3>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm text-blue-600">Vehicle Number</Label>
-                      <p className="font-semibold text-lg text-blue-800">{exitRecord.vehicleNumber}</p>
+                      <Label className="text-sm text-gray-600">Vehicle Number</Label>
+                      <p className="font-semibold text-lg">{exitRecord.vehicleNumber}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-blue-600">Status</Label>
+                      <Label className="text-sm text-gray-600">Status</Label>
                       <div className="flex gap-2">
-                        <Badge variant="default" className="bg-blue-600 text-white">
+                        <Badge variant="default" className="bg-green-600">
                           Completed
                         </Badge>
                         {exitRecord.isPassHolder && (
-                          <Badge variant="default" className="bg-blue-700 text-white">
+                          <Badge variant="default" className="bg-purple-600">
                             Pass Holder
                           </Badge>
                         )}
@@ -256,28 +256,28 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm text-blue-600">Entry Time</Label>
-                      <p className="font-medium text-blue-800">{exitRecord.entryTime.toLocaleString()}</p>
+                      <Label className="text-sm text-gray-600">Entry Time</Label>
+                      <p className="font-medium">{exitRecord.entryTime.toLocaleString()}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-blue-600">Exit Time</Label>
-                      <p className="font-medium text-blue-800">{exitRecord.exitTime?.toLocaleString()}</p>
+                      <Label className="text-sm text-gray-600">Exit Time</Label>
+                      <p className="font-medium">{exitRecord.exitTime?.toLocaleString()}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm text-blue-600">Parking Duration</Label>
+                      <Label className="text-sm text-gray-600">Parking Duration</Label>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-blue-600" />
-                        <p className="font-medium text-blue-800">{formatDuration(exitRecord.duration || 0)}</p>
+                        <p className="font-medium">{formatDuration(exitRecord.duration || 0)}</p>
                       </div>
                     </div>
                     <div>
-                      <Label className="text-sm text-blue-600">Amount Due</Label>
+                      <Label className="text-sm text-gray-600">Amount Due</Label>
                       <div className="flex items-center gap-2">
-                        <IndianRupee className="h-4 w-4 text-blue-600" />
-                        <p className={`font-bold text-xl ${exitRecord.amountDue === 0 ? 'text-blue-600' : 'text-blue-600'}`}>
+                        <IndianRupee className="h-4 w-4 text-green-600" />
+                        <p className={`font-bold text-xl ${exitRecord.amountDue === 0 ? 'text-green-600' : 'text-green-600'}`}>
                           ₹{exitRecord.amountDue}
                         </p>
                       </div>
@@ -285,21 +285,21 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
                   </div>
 
                   {exitRecord.amountDue === 0 ? (
-                    <div className="bg-blue-100 p-4 rounded border border-blue-200">
-                      <p className="text-sm text-blue-700 font-medium">
+                    <div className="bg-purple-100 p-4 rounded border border-purple-200">
+                      <p className="text-sm text-purple-700 font-medium">
                         ✓ Free parking for monthly pass holders
                       </p>
                     </div>
                   ) : (
-                    <div className="bg-white p-4 rounded border border-blue-200">
-                      <p className="text-sm text-blue-600 mb-2">Calculation:</p>
-                      <p className="text-sm text-blue-700">
+                    <div className="bg-white p-4 rounded border">
+                      <p className="text-sm text-gray-600 mb-2">Calculation:</p>
+                      <p className="text-sm">
                         {(exitRecord.duration || 0) <= 6 
                           ? `Up to 6 hours = ₹24` 
                           : `6 hours (₹24) + ${(exitRecord.duration || 0) - 6} extra hours (₹${((exitRecord.duration || 0) - 6) * 10}) = ₹${exitRecord.amountDue}`
                         }
                       </p>
-                      <p className="text-xs text-blue-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         * ₹24 for first 6 hours, then ₹10 per additional hour
                       </p>
                     </div>
