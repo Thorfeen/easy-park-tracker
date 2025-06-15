@@ -65,10 +65,10 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     const doc = new jsPDF();
     const exportRecords = getExportFilteredRecords();
     
-    // Modern color scheme
-    const primaryColor = [79, 70, 229]; // Indigo
-    const secondaryColor = [236, 236, 241]; // Light gray
-    const accentColor = [99, 102, 241]; // Lighter indigo
+    // Modern color scheme - properly typed as tuples
+    const primaryColor: [number, number, number] = [79, 70, 229]; // Indigo
+    const secondaryColor: [number, number, number] = [236, 236, 241]; // Light gray
+    const accentColor: [number, number, number] = [99, 102, 241]; // Lighter indigo
     
     // Header with rounded background
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -175,19 +175,19 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
         fontSize: 9,
         font: 'helvetica',
         cellPadding: 3,
-        lineColor: [220, 220, 220],
+        lineColor: [220, 220, 220] as [number, number, number],
         lineWidth: 0.5
       },
       headStyles: { 
         fillColor: primaryColor,
-        textColor: [255, 255, 255],
+        textColor: [255, 255, 255] as [number, number, number],
         fontStyle: 'bold',
         fontSize: 10
       },
       alternateRowStyles: {
-        fillColor: [249, 250, 251]
+        fillColor: [249, 250, 251] as [number, number, number]
       },
-      tableLineColor: [220, 220, 220],
+      tableLineColor: [220, 220, 220] as [number, number, number],
       tableLineWidth: 0.5,
       theme: 'grid'
     });
