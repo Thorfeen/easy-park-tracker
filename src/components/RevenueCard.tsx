@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,15 +33,15 @@ const RevenueCard = ({ records }: RevenueCardProps) => {
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow border-blue-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
+        <CardTitle className="text-sm font-medium text-blue-700">
           {isToday ? "Today's Revenue" : "Revenue"}
         </CardTitle>
-        <IndianRupee className="h-4 w-4 text-purple-600" />
+        <IndianRupee className="h-4 w-4 text-blue-600" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-purple-600 mb-2">
+        <div className="text-2xl font-bold text-blue-600 mb-2">
           ₹{selectedDateRevenue}
         </div>
         <div className="flex items-center gap-2">
@@ -50,7 +51,7 @@ const RevenueCard = ({ records }: RevenueCardProps) => {
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "text-xs justify-start text-left font-normal",
+                  "text-xs justify-start text-left font-normal border-blue-200 text-blue-700 hover:bg-blue-50",
                   !selectedDate && "text-muted-foreground"
                 )}
               >
@@ -74,7 +75,7 @@ const RevenueCard = ({ records }: RevenueCardProps) => {
             </PopoverContent>
           </Popover>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-blue-500 mt-1">
           {isToday ? "From completed exits today" : `From completed exits on ${format(selectedDate, "MMM dd")}`}
         </p>
       </CardContent>

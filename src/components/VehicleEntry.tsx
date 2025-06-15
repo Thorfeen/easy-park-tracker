@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -130,18 +131,18 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
       <div className="max-w-2xl mx-auto">
         <Button 
           variant="ghost" 
           onClick={onBack}
-          className="mb-6 hover:bg-white/50"
+          className="mb-6 hover:bg-white/50 text-blue-700"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
 
-        <Card className="bg-white shadow-xl">
+        <Card className="bg-white shadow-xl border-blue-200">
           <CardHeader className="text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
             <div className="flex justify-center mb-4">
               <Car className="h-16 w-16" />
@@ -162,8 +163,8 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
             </div>
 
             {detectedPass && (
-              <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center gap-2 text-purple-700 mb-2">
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 text-blue-700 mb-2">
                   <CreditCard className="h-5 w-5" />
                   <span className="font-semibold">Monthly Pass Detected!</span>
                 </div>
@@ -171,7 +172,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
                   <p><strong>Owner:</strong> {detectedPass.ownerName}</p>
                   <p><strong>Pass Type:</strong> {detectedPass.passType.toUpperCase()}</p>
                   <p><strong>Valid Until:</strong> {detectedPass.endDate.toLocaleDateString()}</p>
-                  <p className="text-green-600 font-medium">✓ Free parking for pass holders</p>
+                  <p className="text-blue-600 font-medium">✓ Free parking for pass holders</p>
                 </div>
               </div>
             )}
@@ -180,21 +181,21 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
               <div className="mb-6">
                 <Button
                   onClick={handleScanClick}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 text-lg font-semibold"
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 text-lg font-semibold"
                 >
                   <ScanLine className="h-6 w-6 mr-2" />
                   Scan License Plate
                 </Button>
-                <p className="text-center text-sm text-gray-500 mt-2">
+                <p className="text-center text-sm text-blue-500 mt-2">
                   Recommended for quick entry
                 </p>
                 
                 <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                    <span className="w-full border-t border-blue-200" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-500">Or enter manually</span>
+                    <span className="bg-white px-2 text-blue-500">Or enter manually</span>
                   </div>
                 </div>
               </div>
@@ -202,7 +203,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="vehicleNumber" className="text-base font-semibold">
+                <Label htmlFor="vehicleNumber" className="text-base font-semibold text-blue-800">
                   Vehicle Number *
                 </Label>
                 <div className="flex gap-2">
@@ -212,7 +213,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
                     value={vehicleNumber}
                     onChange={handleVehicleNumberChange}
                     placeholder="Enter vehicle number (e.g., ABC-1234)"
-                    className="text-lg py-3 px-4 flex-1"
+                    className="text-lg py-3 px-4 flex-1 border-blue-200 focus:border-blue-500"
                     disabled={isSubmitting}
                   />
                   {!isMobile && (
@@ -220,19 +221,19 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
                       type="button"
                       onClick={handleScanClick}
                       variant="outline"
-                      className="px-4"
+                      className="px-4 border-blue-200 text-blue-600 hover:bg-blue-50"
                     >
                       <ScanLine className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-blue-600">
                   Enter the complete vehicle number including any letters and numbers
                 </p>
               </div>
 
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Vehicle Type *</Label>
+                <Label className="text-base font-semibold text-blue-800">Vehicle Type *</Label>
                 <RadioGroup
                   value={vehicleType}
                   onValueChange={(value) => setVehicleType(value as 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
@@ -241,15 +242,15 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
                   {vehicleTypes.map((type) => {
                     const Icon = type.icon;
                     return (
-                      <div key={type.value} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <div key={type.value} className="flex items-center space-x-3 p-4 border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer">
                         <RadioGroupItem value={type.value} id={type.value} />
                         <div className="flex items-center space-x-3 flex-1">
-                          <Icon className="h-6 w-6 text-gray-600" />
+                          <Icon className="h-6 w-6 text-blue-600" />
                           <div className="flex-1">
-                            <Label htmlFor={type.value} className="font-medium cursor-pointer">
+                            <Label htmlFor={type.value} className="font-medium cursor-pointer text-blue-800">
                               {type.label}
                             </Label>
-                            <p className="text-sm text-gray-500">{type.description}</p>
+                            <p className="text-sm text-blue-500">{type.description}</p>
                           </div>
                         </div>
                       </div>
@@ -258,13 +259,13 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
                 </RadioGroup>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Entry Details:</h3>
-                <ul className="space-y-1 text-sm text-gray-600">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 className="font-semibold mb-2 text-blue-800">Entry Details:</h3>
+                <ul className="space-y-1 text-sm text-blue-600">
                   <li>• Entry time will be automatically recorded</li>
                   <li>• Vehicle will be marked as active in the system</li>
                   {detectedPass ? (
-                    <li className="text-green-600 font-medium">• Free parking for monthly pass holders</li>
+                    <li className="text-blue-600 font-medium">• Free parking for monthly pass holders</li>
                   ) : (
                     <li>• Parking charges: ₹24 for first 6 hours, then ₹10 per hour</li>
                   )}
