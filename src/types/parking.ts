@@ -1,3 +1,4 @@
+
 export interface MonthlyPass {
   id: string;
   vehicleNumber: string;
@@ -9,6 +10,7 @@ export interface MonthlyPass {
   endDate: Date;
   amount: number;
   status: 'active' | 'expired' | 'suspended';
+  lastUsedAt?: Date; // Added for recently used passes feature
 }
 
 export interface PassHolder {
@@ -31,3 +33,4 @@ export interface ParkingRecord {
   isPassHolder?: boolean;
   passId?: string;
 }
+
