@@ -11,6 +11,10 @@ import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard, Ind
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
 import { calculateParkingCharges } from "@/utils/parkingCharges";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const FullscreenToggleButton = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -242,6 +246,61 @@ const Index = () => {
   const threeWheelerEntriesCount = parkingRecords.filter(record => record.vehicleType === "three-wheeler").length;
   const fourWheelerEntriesCount = parkingRecords.filter(record => record.vehicleType === "four-wheeler").length;
 
+  const getDateString = (date: Date) => {
+    return format(date, "yyyy-MM-dd");
+  };
+  const isSameDay = (a: Date, b: Date) => {
+    return getDateString(a) === getDateString(b);
+  };
+
+  // --- Revenue Calculations ---
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  function getRevenueForDate(records: ParkingRecord[], date: Date) {
+    const dateStr = getDateString(date);
+    return records
+      .filter(r => r.status === "completed" && r.exitTime && getDateString(r.exitTime) === dateStr && !r.isPassHolder)
+      .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
+  }
+  function getRevenueForPeriod(records: ParkingRecord[], start: Date, end: Date) {
+    return records
+      .filter(r => r.status === "completed" && r.exitTime && r.exitTime >= start && r.exitTime <= end && !r.isPassHolder)
+      .reduce((sum, rec) => sum + (rec.amountDue || 0), 0);
+  }
+
+  const [selectedRevenueDate, setSelectedRevenueDate] = useState<Date>(today);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Today's Revenue
+  const todaysRevenue = getRevenueForDate(parkingRecords, today);
+
+  // Yesterday's Revenue
+  const yesterdaysRevenue = getRevenueForDate(parkingRecords, yesterday);
+
+  // Last 7 Days Revenue (including today) -- period is 6 days before now to end of today
+  const start7Days = new Date(today);
+  start7Days.setDate(today.getDate() - 6);
+  start7Days.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(today);
+  endOfToday.setHours(23, 59, 59, 999);
+  const last7DaysRevenue = getRevenueForPeriod(parkingRecords, start7Days, endOfToday);
+
+  // Current Month Revenue
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+  const monthlyRevenue = getRevenueForPeriod(parkingRecords, firstDayOfMonth, lastDayOfMonth);
+
+  // Monthly Pass Sales for current month
+  const monthlyPassSales = monthlyPasses.filter(pass =>
+    pass.startDate >= firstDayOfMonth && pass.startDate <= lastDayOfMonth
+  ).reduce((sum, pass) => sum + (pass.amount || 0), 0);
+
+  // Revenue for selected date
+  const selectedDateRevenue = getRevenueForDate(parkingRecords, selectedRevenueDate);
+  const isRevenueToday = isSameDay(selectedRevenueDate, today);
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'entry':
@@ -386,22 +445,72 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
-                {/* UPDATED REVENUE STATS CARD */}
+                {/* UPDATED REVENUE STATS CARD (enhanced) */}
                 <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      {isRevenueToday ? "Today's Revenue" : "Revenue"}
+                    </CardTitle>
                     <IndianRupee className="h-4 w-4 text-orange-600" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">{`₹${totalRevenue}`}</div>
-                    <div className="space-y-1 mt-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span>Parking Charges</span>
-                        <span className="font-medium">{`₹${parkingRevenue}`}</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="text-2xl font-bold text-orange-600">
+                        ₹{selectedDateRevenue}
                       </div>
-                      <div className="flex items-center justify-between text-xs">
+                      <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              "text-xs justify-start text-left font-normal",
+                              !selectedRevenueDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-3 w-3" />
+                            {isRevenueToday
+                              ? "Today"
+                              : format(selectedRevenueDate, "MMM dd, yyyy")}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedRevenueDate}
+                            onSelect={date => {
+                              if (date) {
+                                setSelectedRevenueDate(date);
+                                setIsCalendarOpen(false);
+                              }
+                            }}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {isRevenueToday
+                        ? "From completed exits today"
+                        : `Completed exits on ${format(selectedRevenueDate, "MMM dd, yyyy")}`}
+                    </p>
+                    <div className="space-y-1 mt-1 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span>Yesterday Sales</span>
+                        <span className="font-medium">₹{yesterdaysRevenue}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Last 7 Days Sales</span>
+                        <span className="font-medium">₹{last7DaysRevenue}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Monthly Sales</span>
+                        <span className="font-medium">₹{monthlyRevenue}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
                         <span>Monthly Pass Sales</span>
-                        <span className="font-medium">{`₹${monthlyPassRevenue}`}</span>
+                        <span className="font-medium">₹{monthlyPassSales}</span>
                       </div>
                     </div>
                   </CardContent>
