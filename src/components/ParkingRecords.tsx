@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -288,44 +287,6 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
           </CardHeader>
           
           <CardContent className="p-6">
-            {/* Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-blue-600">Active Vehicles</p>
-                    <p className="text-2xl font-bold text-blue-700">{records.filter(r => r.status === 'active').length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <div className="flex items-center gap-2">
-                  <History className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="text-sm text-green-600">Completed</p>
-                    <p className="text-2xl font-bold text-green-700">{records.filter(r => r.status === 'completed').length}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="h-5 w-5 text-orange-600" />
-                  <div>
-                    <p className="text-sm text-orange-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-orange-700">
-                      ₹{records
-                        .filter(r => r.status === 'completed')
-                        .reduce((sum, record) => sum + (record.amountDue || 0), 0)
-                      }
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Export Section */}
             <Card className="mb-6 bg-gray-50">
               <CardHeader>
