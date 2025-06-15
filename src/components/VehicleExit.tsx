@@ -10,7 +10,7 @@ import { ParkingRecord } from "@/types/parking";
 import { formatDurationFull } from "@/utils/parkingCharges";
 
 interface VehicleExitProps {
-  onProcessExit: (vehicleNumber: string) => ParkingRecord | null;
+  onProcessExit: (vehicleNumber: string) => Promise<ParkingRecord | null>;
   onBack: () => void;
   findActivePass: (vehicleNumber: string) => any | null;
   onUpdatePassLastUsedAt: (passId: string) => void;
@@ -41,7 +41,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
     setExitRecord(null);
 
     try {
-      const record = onProcessExit(vehicleNumber);
+      const record = await onProcessExit(vehicleNumber);
       
       if (record) {
         setExitRecord(record);

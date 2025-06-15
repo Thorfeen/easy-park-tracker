@@ -135,7 +135,7 @@ const Index = () => {
     vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
     helmet?: boolean,
     showToast?: (args: { title: string, description: string, variant?: string }) => void
-  ) => {
+  ): Promise<boolean> => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
 
     if (activeVehicles.find(
@@ -151,12 +151,10 @@ const Index = () => {
       return false;
     }
 
-    // STRICT PASS CHECK
     const matchedPass = findActivePass(upperVehicleNumber, vehicleType);
     const anyPass = findActivePass(upperVehicleNumber);
 
     if (anyPass && (!matchedPass || anyPass.vehicleType !== vehicleType)) {
-      // Pass exists for this number but not for the selected type.
       showToast?.({
         title: "Pass Type Mismatch",
         description: `The active pass for ${upperVehicleNumber} is for ${anyPass.vehicleType.toUpperCase()}. Please select the correct vehicle type.`,
@@ -188,7 +186,7 @@ const Index = () => {
     }
   };
 
-  const processVehicleExit = async (vehicleNumber: string) => {
+  const processVehicleExit = async (vehicleNumber: string): Promise<ParkingRecord | null> => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activeRecord = parkingRecords.find(
       record => record.vehicleNumber === upperVehicleNumber && record.status === 'active'
@@ -203,7 +201,6 @@ const Index = () => {
     let amountDue = 0;
     let calculationBreakdown: string[] = [];
 
-    // -- Use existing revenue and breakdown logic --
     const activePass = findActivePass(upperVehicleNumber, activeRecord.vehicleType);
     if (activePass && activePass.endDate > new Date()) {
       amountDue = 0;
@@ -317,12 +314,7 @@ const Index = () => {
       case 'entry':
         return (
           <VehicleEntry
-            onAddEntry={(
-              vehicleNumber: string,
-              vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
-              helmet?: boolean,
-              toastCallback?: (args: { title: string; description: string; variant?: string }) => void
-            ) => addVehicleEntry(vehicleNumber, vehicleType, helmet, toastCallback)}
+            onAddEntry={addVehicleEntry}
             onBack={() => setCurrentView('dashboard')}
             findActivePass={findActivePass}
             onUpdatePassLastUsedAt={updatePassLastUsedAt}

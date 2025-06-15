@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ParkingRecord } from "@/types/parking";
 
+// Use type as per Supabase table (all possible fields, required for insert)
 type RawRecord = {
   id: number;
   vehicle_number: string;
@@ -14,7 +15,7 @@ type RawRecord = {
   status: string;
   is_pass_holder: boolean | null;
   pass_id: string | null;
-  calculation_breakdown: any | null;
+  calculation_breakdown: string[] | null;
   helmet: boolean | null;
   created_at: string | null;
 };
@@ -38,6 +39,7 @@ function toAppRecord(raw: RawRecord): ParkingRecord {
   };
 }
 
+// For insert/update, only include correct keys
 function fromAppRecord(record: Partial<ParkingRecord>): Partial<RawRecord> {
   return {
     vehicle_number: record.vehicleNumber,
@@ -51,6 +53,7 @@ function fromAppRecord(record: Partial<ParkingRecord>): Partial<RawRecord> {
     pass_id: record.passId,
     calculation_breakdown: record.calculationBreakdown,
     helmet: record.helmet,
+    // created_at handled by db default
   };
 }
 
@@ -64,28 +67,40 @@ export function useParkingRecords() {
       .from("parking_records")
       .select("*")
       .order("entry_time", { ascending: false });
-
     if (error) {
       console.error("Error fetching records:", error);
       setLoading(false);
       return;
     }
-    setRecords(data.map(toAppRecord));
+    setRecords((data as RawRecord[]).map(toAppRecord));
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchRecords();
-    // Optionally: add real-time subscription here
   }, [fetchRecords]);
 
-  const addEntry = async (record: Omit<ParkingRecord, "id" | "status"> & { status?: ParkingRecord["status"] }) => {
+  // Proper type for insert!
+  const addEntry = async (
+    record: Omit<ParkingRecord, "id" | "status"> & { status?: ParkingRecord["status"] }
+  ) => {
+    // Extract and set required fields for the insert (per table definition)
+    const toInsert = {
+      ...fromAppRecord({ ...record, status: "active" })
+    };
+    // required fields check
+    if (
+      !toInsert.vehicle_number ||
+      !toInsert.vehicle_type ||
+      !toInsert.entry_time ||
+      !toInsert.status
+    ) {
+      throw new Error("Missing required fields for parking record insert");
+    }
     const { data, error } = await supabase
       .from("parking_records")
       .insert([
-        {
-          ...fromAppRecord({ ...record, status: "active" }),
-        }
+        toInsert
       ])
       .select()
       .single();
@@ -94,7 +109,7 @@ export function useParkingRecords() {
       throw error;
     }
 
-    const saved = toAppRecord(data);
+    const saved = toAppRecord(data as RawRecord);
     setRecords((prev) => [saved, ...prev]);
     return saved;
   };
@@ -111,7 +126,7 @@ export function useParkingRecords() {
       throw error;
     }
 
-    const updated = toAppRecord(data);
+    const updated = toAppRecord(data as RawRecord);
     setRecords((prev) =>
       prev.map((r) => (r.id === String(updated.id) ? updated : r))
     );
@@ -124,6 +139,6 @@ export function useParkingRecords() {
     addEntry,
     updateExit,
     fetchRecords,
-    setRecords, // Direct set for bulk usage, if needed
+    setRecords,
   };
 }

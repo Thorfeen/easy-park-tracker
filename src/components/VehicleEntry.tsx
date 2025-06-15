@@ -12,7 +12,13 @@ import ParkingRatesGrid from "./vehicle-entry/ParkingRatesGrid";
 import { format } from "date-fns";
 
 interface VehicleEntryProps {
-  onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', helmet: boolean, toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
+  // Make onAddEntry async and returns Promise<boolean>
+  onAddEntry: (
+    vehicleNumber: string,
+    vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    helmet: boolean,
+    toastCallback?: (args: { title: string, description: string, variant?: string }) => void
+  ) => Promise<boolean>;
   onBack: () => void;
   findActivePass: (vehicleNumber: string, vehicleType?: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => any | null;
   onUpdatePassLastUsedAt: (passId: string) => void;
@@ -129,15 +135,13 @@ const VehicleEntry = ({
 
     setIsSubmitting(true);
 
-    // Pass the safeToastCallback in onAddEntry for granular error feedback
-    const result = onAddEntry(vehicleNumber, vehicleType, helmet, safeToastCallback);
+    const result = await onAddEntry(vehicleNumber, vehicleType, helmet, safeToastCallback);
 
     if (result === false) {
       setIsSubmitting(false);
       return;
     }
 
-    // If a pass was detected and used, update its lastUsedAt
     if (detectedPass && detectedPass.id) {
       onUpdatePassLastUsedAt(detectedPass.id);
     }
