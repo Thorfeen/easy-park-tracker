@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +39,11 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
 
   const activePasses = passes.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const expiredPasses = passes.filter(pass => pass.status === 'expired' || pass.endDate <= new Date());
+
+  // Sort activePasses by startDate descending for recently used list
+  const sortedActivePasses = [...activePasses].sort(
+    (a, b) => b.startDate.getTime() - a.startDate.getTime()
+  );
 
   const getFilteredPasses = () => {
     let filteredPasses = passes;
@@ -410,21 +414,14 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
                   </Card>
                 </div>
 
-                {/* Recent Active Passes Preview */}
+                {/* Recently Used Passes Preview */}
                 {activePasses.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">Recent Active Passes</h3>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setCurrentView('active')}
-                      >
-                        View All Active
-                      </Button>
+                      <h3 className="text-lg font-semibold">Recently Used Passes</h3>
                     </div>
                     <div className="space-y-3">
-                      {activePasses.slice(0, 3).map(renderPassCard)}
+                      {sortedActivePasses.slice(0, 3).map(renderPassCard)}
                     </div>
                     {activePasses.length > 3 && (
                       <p className="text-center text-gray-500 mt-4">
