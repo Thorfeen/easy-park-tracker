@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatDurationFull } from "@/utils/parkingCharges";
 
 interface VehicleEntryProps {
   onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
@@ -14,6 +15,51 @@ interface VehicleEntryProps {
   onUpdatePassLastUsedAt: (passId: string) => void;
   findActiveVehicle: (vehicleNumber: string) => any | null;
 }
+
+const pricingDetails = [
+  {
+    type: "Cycle",
+    rates: [
+      "0–2 hrs: ₹5",
+      "2–6 hrs: ₹5",
+      "6–12 hrs: ₹10",
+      "12–24 hrs: ₹15",
+      ">24 hrs: ₹20/day",
+      "Monthly: ₹300",
+      "Helmet (optional): ₹2/day"
+    ]
+  },
+  {
+    type: "Two-Wheeler",
+    rates: [
+      "0–6 hrs: ₹10",
+      "6–12 hrs: ₹30",
+      "12–24 hrs: ₹40",
+      ">24 hrs: ₹40/day",
+      "Monthly: ₹600",
+      "Helmet (optional): ₹2/day"
+    ]
+  },
+  {
+    type: "Three-Wheeler",
+    rates: [
+      "0–6 hrs: ₹30",
+      "6–12 hrs: ₹60",
+      "12–24 hrs: ₹80",
+      ">24 hrs: ₹80/day",
+      "Monthly: ₹1200"
+    ]
+  },
+  {
+    type: "Four-Wheeler",
+    rates: [
+      "0–6 hrs: ₹40",
+      "6–24 hrs: ₹80",
+      ">24 hrs: ₹80/day",
+      "Monthly: ₹1500"
+    ]
+  }
+];
 
 const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsedAt, findActiveVehicle }: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -243,12 +289,27 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
                   {detectedPass && !passTypeMismatch ? (
                     <li className="text-green-600 font-medium">• Free parking for monthly pass holders</li>
                   ) : (
-                    <li>• Parking charges: ₹24 for first 6 hours, then ₹10 per hour</li>
+                    <li>• Parking charges as per rates below</li>
                   )}
                   {passTypeMismatch && (
                     <li className="text-red-600 font-medium">• The vehicle type does not match the pass type</li>
                   )}
                 </ul>
+                <summary className="block mt-3">
+                  <span className="block font-semibold text-blue-700 mb-1">Parking Rates:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {pricingDetails.map(detail => (
+                      <div key={detail.type}>
+                        <div className="font-medium text-gray-900">{detail.type}</div>
+                        <ul className="pl-4 list-disc space-y-0.5">
+                          {detail.rates.map(rate => (
+                            <li key={rate} className="text-xs text-gray-700">{rate}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </summary>
               </div>
 
               <Button

@@ -10,6 +10,7 @@ import MonthlyPassManagement from "@/components/MonthlyPassManagement";
 import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard } from "lucide-react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
+import { calculateParkingCharges } from "@/utils/parkingCharges";
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
@@ -118,6 +119,7 @@ const Index = () => {
     return true;
   };
 
+  // UPDATED EXIT PROCESSING LOGIC
   const processVehicleExit = (vehicleNumber: string) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activeRecord = parkingRecords.find(
@@ -133,21 +135,24 @@ const Index = () => {
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
 
     let amountDue = 0;
+    let calculationBreakdown: string[] = [];
 
     // Check if vehicle has active pass
-    const activePass = findActivePass(upperVehicleNumber);
+    const activePass = findActivePass(upperVehicleNumber, activeRecord.vehicleType);
 
     if (activePass && activePass.endDate > new Date()) {
       // Pass holder - no charges
       amountDue = 0;
+      calculationBreakdown = [`Monthly Pass Holder (${activePass.vehicleType.toUpperCase()}): ₹0`];
     } else {
-      // Regular pricing for non-pass holders or expired passes
-      if (durationHours <= 6) {
-        amountDue = 24;
-      } else {
-        const extraHours = durationHours - 6;
-        amountDue = 24 + (extraHours * 10);
-      }
+      // Use new pricing function
+      const { amount, breakdown } = calculateParkingCharges(
+        activeRecord.vehicleType,
+        activeRecord.entryTime,
+        exitTime
+      );
+      amountDue = amount;
+      calculationBreakdown = breakdown;
     }
 
     const updatedRecord = {
@@ -155,6 +160,7 @@ const Index = () => {
       exitTime,
       duration: durationHours,
       amountDue,
+      calculationBreakdown, // <-- Pass this to VehicleExit for display
       status: 'completed' as const,
       isPassHolder: !!activePass,
       passId: activePass?.id

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Clock, Car, IndianRupee, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ParkingRecord } from "@/types/parking";
+import { formatDurationFull } from "@/utils/parkingCharges";
 
 interface VehicleExitProps {
   onProcessExit: (vehicleNumber: string) => ParkingRecord | null;
@@ -92,11 +93,6 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
     setVehicleNumber("");
     setExitRecord(null);
     setVehicleNotFound(false);
-  };
-
-  const formatDuration = (hours: number) => {
-    if (hours === 1) return "1 hour";
-    return `${hours} hours`;
   };
 
   return (
@@ -211,7 +207,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
                       <Label className="text-sm text-gray-600">Parking Duration</Label>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-blue-600" />
-                        <p className="font-medium">{formatDuration(exitRecord.duration || 0)}</p>
+                        <p className="font-medium">{formatDurationFull(exitRecord.duration || 0)}</p>
                       </div>
                     </div>
                     <div>
@@ -225,23 +221,24 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
                     </div>
                   </div>
 
-                  {exitRecord.amountDue === 0 ? (
+                  {/* Calculation breakdown */}
+                  {exitRecord.calculationBreakdown && (
+                    <div className="bg-white p-4 rounded border">
+                      <p className="text-sm text-gray-600 mb-2">Calculation:</p>
+                      <ul className="list-disc pl-5 text-sm">
+                        {exitRecord.calculationBreakdown.map((item, i) => (
+                          <li key={i} className="text-gray-700">{item}</li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-gray-500 mt-1">
+                        For {exitRecord.vehicleType.replace(/-/g, ' ')}: according to detailed slab rates.
+                      </p>
+                    </div>
+                  )}
+                  {exitRecord.amountDue === 0 && (
                     <div className="bg-purple-100 p-4 rounded border border-purple-200">
                       <p className="text-sm text-purple-700 font-medium">
                         ✓ Free parking for monthly pass holders
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="bg-white p-4 rounded border">
-                      <p className="text-sm text-gray-600 mb-2">Calculation:</p>
-                      <p className="text-sm">
-                        {(exitRecord.duration || 0) <= 6 
-                          ? `Up to 6 hours = ₹24` 
-                          : `6 hours (₹24) + ${(exitRecord.duration || 0) - 6} extra hours (₹${((exitRecord.duration || 0) - 6) * 10}) = ₹${exitRecord.amountDue}`
-                        }
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        * ₹24 for first 6 hours, then ₹10 per additional hour
                       </p>
                     </div>
                   )}
