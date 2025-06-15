@@ -1,12 +1,18 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, History, Search, Clock, IndianRupee } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, History, Search, Clock, IndianRupee, Download, FileText, FileSpreadsheet, CalendarIcon } from "lucide-react";
 import { ParkingRecord } from "@/pages/Index";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface ParkingRecordsProps {
   records: ParkingRecord[];
@@ -16,12 +22,127 @@ interface ParkingRecordsProps {
 const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed'>('all');
+  const [exportDateFrom, setExportDateFrom] = useState<Date>();
+  const [exportDateTo, setExportDateTo] = useState<Date>();
+  const [isFromCalendarOpen, setIsFromCalendarOpen] = useState(false);
+  const [isToCalendarOpen, setIsToCalendarOpen] = useState(false);
 
   const filteredRecords = records.filter(record => {
     const matchesSearch = record.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || record.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
+  const getExportFilteredRecords = () => {
+    return records.filter(record => {
+      if (!exportDateFrom && !exportDateTo) return true;
+      
+      const recordDate = record.exitTime || record.entryTime;
+      const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
+      
+      if (exportDateFrom && exportDateTo) {
+        const fromDate = new Date(exportDateFrom.getFullYear(), exportDateFrom.getMonth(), exportDateFrom.getDate());
+        const toDate = new Date(exportDateTo.getFullYear(), exportDateTo.getMonth(), exportDateTo.getDate());
+        return recordDateOnly >= fromDate && recordDateOnly <= toDate;
+      }
+      
+      if (exportDateFrom) {
+        const fromDate = new Date(exportDateFrom.getFullYear(), exportDateFrom.getMonth(), exportDateFrom.getDate());
+        return recordDateOnly >= fromDate;
+      }
+      
+      if (exportDateTo) {
+        const toDate = new Date(exportDateTo.getFullYear(), exportDateTo.getMonth(), exportDateTo.getDate());
+        return recordDateOnly <= toDate;
+      }
+      
+      return true;
+    });
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const exportRecords = getExportFilteredRecords();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.text('Railway Parking Management - Records', 14, 22);
+    
+    // Date range
+    if (exportDateFrom || exportDateTo) {
+      doc.setFontSize(12);
+      let dateText = 'Date Range: ';
+      if (exportDateFrom) dateText += `From ${format(exportDateFrom, 'dd/MM/yyyy')} `;
+      if (exportDateTo) dateText += `To ${format(exportDateTo, 'dd/MM/yyyy')}`;
+      doc.text(dateText, 14, 32);
+    }
+    
+    // Summary
+    const completedRecords = exportRecords.filter(r => r.status === 'completed');
+    const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
+    
+    doc.setFontSize(12);
+    doc.text(`Total Records: ${exportRecords.length}`, 14, 42);
+    doc.text(`Active Vehicles: ${exportRecords.filter(r => r.status === 'active').length}`, 14, 50);
+    doc.text(`Completed: ${completedRecords.length}`, 14, 58);
+    doc.text(`Total Revenue: ₹${totalRevenue}`, 14, 66);
+    
+    // Table
+    const tableData = exportRecords.map(record => [
+      record.vehicleNumber,
+      record.vehicleType,
+      record.entryTime.toLocaleString(),
+      record.exitTime ? record.exitTime.toLocaleString() : '-',
+      record.duration ? `${record.duration} hours` : '-',
+      record.amountDue ? `₹${record.amountDue}` : '-',
+      record.status
+    ]);
+    
+    autoTable(doc, {
+      head: [['Vehicle Number', 'Type', 'Entry Time', 'Exit Time', 'Duration', 'Amount', 'Status']],
+      body: tableData,
+      startY: 75,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+    
+    doc.save(`parking-records-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  };
+
+  const exportToExcel = () => {
+    const exportRecords = getExportFilteredRecords();
+    
+    const worksheetData = exportRecords.map(record => ({
+      'Vehicle Number': record.vehicleNumber,
+      'Vehicle Type': record.vehicleType,
+      'Entry Time': record.entryTime.toLocaleString(),
+      'Exit Time': record.exitTime ? record.exitTime.toLocaleString() : '-',
+      'Duration (Hours)': record.duration || '-',
+      'Amount (₹)': record.amountDue || '-',
+      'Status': record.status
+    }));
+    
+    // Add summary at the top
+    const completedRecords = exportRecords.filter(r => r.status === 'completed');
+    const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
+    
+    const summaryData = [
+      { 'Vehicle Number': 'SUMMARY', 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
+      { 'Vehicle Number': `Total Records: ${exportRecords.length}`, 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
+      { 'Vehicle Number': `Active Vehicles: ${exportRecords.filter(r => r.status === 'active').length}`, 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
+      { 'Vehicle Number': `Completed: ${completedRecords.length}`, 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
+      { 'Vehicle Number': `Total Revenue: ₹${totalRevenue}`, 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
+      { 'Vehicle Number': '', 'Vehicle Type': '', 'Entry Time': '', 'Exit Time': '', 'Duration (Hours)': '', 'Amount (₹)': '', 'Status': '' },
+    ];
+    
+    const finalData = [...summaryData, ...worksheetData];
+    
+    const worksheet = XLSX.utils.json_to_sheet(finalData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Parking Records");
+    
+    XLSX.writeFile(workbook, `parking-records-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
 
   const activeCount = records.filter(r => r.status === 'active').length;
   const completedCount = records.filter(r => r.status === 'completed').length;
@@ -97,6 +218,117 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                 </div>
               </div>
             </div>
+
+            {/* Export Section */}
+            <Card className="mb-6 bg-gray-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Export Records
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">From Date</label>
+                    <Popover open={isFromCalendarOpen} onOpenChange={setIsFromCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !exportDateFrom && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {exportDateFrom ? format(exportDateFrom, "dd/MM/yyyy") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={exportDateFrom}
+                          onSelect={(date) => {
+                            setExportDateFrom(date);
+                            setIsFromCalendarOpen(false);
+                          }}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">To Date</label>
+                    <Popover open={isToCalendarOpen} onOpenChange={setIsToCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !exportDateTo && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {exportDateTo ? format(exportDateTo, "dd/MM/yyyy") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={exportDateTo}
+                          onSelect={(date) => {
+                            setExportDateTo(date);
+                            setIsToCalendarOpen(false);
+                          }}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <Button 
+                    onClick={exportToPDF}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export PDF
+                  </Button>
+                  
+                  <Button 
+                    onClick={exportToExcel}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Export Excel
+                  </Button>
+                </div>
+                
+                {(exportDateFrom || exportDateTo) && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      Export will include records 
+                      {exportDateFrom && ` from ${format(exportDateFrom, "dd/MM/yyyy")}`}
+                      {exportDateTo && ` to ${format(exportDateTo, "dd/MM/yyyy")}`}
+                      {!exportDateFrom && !exportDateTo && ' for all dates'}
+                    </p>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        setExportDateFrom(undefined);
+                        setExportDateTo(undefined);
+                      }}
+                      className="mt-2 text-blue-600 hover:text-blue-800"
+                    >
+                      Clear date filter
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Search and Filter */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
