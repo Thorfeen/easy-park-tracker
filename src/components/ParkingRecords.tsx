@@ -164,8 +164,8 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     const tableData = exportRecords.map(record => [
       record.vehicleNumber,
       record.vehicleType,
-      record.entryTime.toLocaleString(),
-      record.exitTime ? record.exitTime.toLocaleString() : '-',
+      format(record.entryTime, "h:mm a, dd/MM/yyyy"),
+      record.exitTime ? format(record.exitTime, "h:mm a, dd/MM/yyyy") : '-',
       record.duration ? `${record.duration} hours` : '-',
       (record.status === 'completed' && record.isPassHolder)
         ? "Pass"
