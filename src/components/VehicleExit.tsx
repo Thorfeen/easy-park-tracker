@@ -48,6 +48,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
 
         // If the exited vehicle was a pass holder, update pass lastUsedAt
         if (record.isPassHolder && record.passId) {
+          // Update lastUsedAt on exit for pass-holder
           onUpdatePassLastUsedAt(record.passId);
         }
 

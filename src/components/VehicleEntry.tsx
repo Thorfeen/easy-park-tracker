@@ -143,6 +143,7 @@ const VehicleEntry = ({
     }
 
     if (detectedPass && detectedPass.id) {
+      // Update lastUsedAt WHENEVER a pass-holder arrives
       onUpdatePassLastUsedAt(detectedPass.id);
     }
 
