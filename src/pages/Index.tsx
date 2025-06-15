@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +10,45 @@ import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard } fr
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import RevenueCard from "@/components/RevenueCard";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
+import { useUser } from "@supabase/auth-helpers-react"; // you may use supabase.auth.getUser() directly if useUser is not available
+import { useParkingRecords } from "@/hooks/useParkingRecords";
+import { useMonthlyPasses } from "@/hooks/useMonthlyPasses";
 
 const Index = () => {
+  // Get current user
+  const [userId, setUserId] = useState<string | undefined>();
+
+  useEffect(() => {
+    // Use supabase auth to get user id
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.auth.getUser().then((result) => {
+        setUserId(result.data.user?.id);
+      });
+    });
+  }, []);
+
   const [currentView, setCurrentView] = useState<'dashboard' | 'entry' | 'exit' | 'records' | 'passes'>('dashboard');
-  const [parkingRecords, setParkingRecords] = useState<ParkingRecord[]>([]);
-  const [monthlyPasses, setMonthlyPasses] = useState<MonthlyPass[]>([]);
+
+  const {
+    parkingRecords,
+    isLoading: recordsLoading,
+    error: recordsError,
+    createParkingRecord,
+    updateParkingRecord,
+    refetch: refetchParkingRecords,
+  } = useParkingRecords(userId);
+
+  const {
+    monthlyPasses,
+    isLoading: passesLoading,
+    error: passesError,
+    createMonthlyPass,
+    refetch: refetchMonthlyPasses,
+  } = useMonthlyPasses(userId);
+
   const isMobile = useMobileDetection();
 
+  // The following aggregation logic remains mostly unchanged, but now references the fetched records
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
   const activeTwoWheelers = activeVehicles.filter(record => record.vehicleType === 'two-wheeler');
   const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
@@ -29,29 +60,31 @@ const Index = () => {
 
   const findActivePass = (vehicleNumber: string): MonthlyPass | null => {
     return monthlyPasses.find(
-      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() && 
-      pass.status === 'active' && 
-      pass.endDate > new Date()
+      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() &&
+        pass.status === 'active' &&
+        pass.endDate > new Date()
     ) || null;
   };
 
-  const addVehicleEntry = (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
+  // Persist vehicle entry to the DB
+  const addVehicleEntry = (
+    vehicleNumber: string,
+    vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
+  ) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activePass = findActivePass(upperVehicleNumber);
-    
-    const newRecord: ParkingRecord = {
-      id: Date.now().toString(),
+
+    createParkingRecord.mutate({
       vehicleNumber: upperVehicleNumber,
       vehicleType,
       entryTime: new Date(),
-      status: 'active',
+      status: "active",
       isPassHolder: !!activePass,
-      passId: activePass?.id
-    };
-    setParkingRecords(prev => [...prev, newRecord]);
-    console.log('New vehicle entry added:', newRecord);
+      passId: activePass?.id,
+    });
   };
 
+  // Process vehicle exit and update record in DB
   const processVehicleExit = (vehicleNumber: string) => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activeRecord = parkingRecords.find(
@@ -63,14 +96,14 @@ const Index = () => {
     }
 
     const exitTime = new Date();
-    const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
+    const durationMs = exitTime.getTime() - new Date(activeRecord.entryTime!).getTime();
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
-    
+
     let amountDue = 0;
-    
+
     // Check if vehicle has active pass
     const activePass = findActivePass(upperVehicleNumber);
-    
+
     if (activePass && activePass.endDate > new Date()) {
       // Pass holder - no charges
       amountDue = 0;
@@ -84,33 +117,32 @@ const Index = () => {
       }
     }
 
-    const updatedRecord = {
+    updateParkingRecord.mutate({
+      recordId: activeRecord.id,
+      fields: {
+        exitTime,
+        duration: durationHours,
+        amountDue,
+        status: "completed",
+        isPassHolder: !!activePass,
+        passId: activePass?.id,
+      },
+    });
+
+    return {
       ...activeRecord,
       exitTime,
       duration: durationHours,
       amountDue,
-      status: 'completed' as const,
+      status: "completed" as const,
       isPassHolder: !!activePass,
       passId: activePass?.id
     };
-
-    setParkingRecords(prev =>
-      prev.map(record =>
-        record.id === activeRecord.id ? updatedRecord : record
-      )
-    );
-
-    console.log('Vehicle exit processed:', updatedRecord);
-    return updatedRecord;
   };
 
+  // Add monthly pass via DB
   const addMonthlyPass = (passData: Omit<MonthlyPass, 'id'>) => {
-    const newPass: MonthlyPass = {
-      ...passData,
-      id: Date.now().toString()
-    };
-    setMonthlyPasses(prev => [...prev, newPass]);
-    console.log('New monthly pass created:', newPass);
+    createMonthlyPass.mutate(passData);
   };
 
   const renderCurrentView = () => {

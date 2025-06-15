@@ -9,7 +9,143 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      monthly_passes: {
+        Row: {
+          amount: number
+          created_at: string | null
+          end_date: string
+          id: string
+          owner_name: string
+          owner_phone: string
+          pass_type: string
+          start_date: string
+          status: string
+          updated_at: string | null
+          user_id: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          end_date: string
+          id?: string
+          owner_name: string
+          owner_phone: string
+          pass_type: string
+          start_date: string
+          status: string
+          updated_at?: string | null
+          user_id: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          owner_name?: string
+          owner_phone?: string
+          pass_type?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          vehicle_number?: string
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
+      parking_records: {
+        Row: {
+          amount_due: number | null
+          created_at: string | null
+          duration: number | null
+          entry_time: string
+          exit_time: string | null
+          id: string
+          is_pass_holder: boolean | null
+          pass_id: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Insert: {
+          amount_due?: number | null
+          created_at?: string | null
+          duration?: number | null
+          entry_time: string
+          exit_time?: string | null
+          id?: string
+          is_pass_holder?: boolean | null
+          pass_id?: string | null
+          status: string
+          updated_at?: string | null
+          user_id: string
+          vehicle_number: string
+          vehicle_type: string
+        }
+        Update: {
+          amount_due?: number | null
+          created_at?: string | null
+          duration?: number | null
+          entry_time?: string
+          exit_time?: string | null
+          id?: string
+          is_pass_holder?: boolean | null
+          pass_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          vehicle_number?: string
+          vehicle_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parking_records_pass_id_fkey"
+            columns: ["pass_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_passes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pass_holders: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
