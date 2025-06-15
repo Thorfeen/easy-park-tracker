@@ -19,6 +19,9 @@ const Index = () => {
   const isMobile = useMobileDetection();
 
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
+  // NEW: Calculate helmets in safe
+  const helmetsInSafeCount = activeVehicles.filter(record => record.helmet === true).length;
+
   const activeCycles = activeVehicles.filter(record => record.vehicleType === 'cycle');
   const activeTwoWheelers = activeVehicles.filter(record => record.vehicleType === 'two-wheeler');
   const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
