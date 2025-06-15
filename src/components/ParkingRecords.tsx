@@ -277,8 +277,8 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full h-full bg-gradient-to-br from-orange-50 to-orange-100">
+      <div className="w-full h-full">
         <Button 
           variant="ghost" 
           onClick={onBack}
@@ -288,8 +288,8 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
           Back to Dashboard
         </Button>
 
-        <Card className="bg-white shadow-xl mb-6">
-          <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
+        <Card className="bg-white shadow-xl mb-6 w-full h-full rounded-none">
+          <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-none">
             <div className="flex justify-center mb-4">
               <History className="h-16 w-16" />
             </div>

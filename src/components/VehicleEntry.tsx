@@ -198,8 +198,8 @@ const VehicleEntry = ({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="w-full h-full">
         <Button 
           variant="ghost" 
           onClick={onBack}
@@ -209,8 +209,8 @@ const VehicleEntry = ({
           Back to Dashboard
         </Button>
 
-        <Card className="bg-white shadow-xl">
-          <CardHeader className="text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
+        <Card className="bg-white shadow-xl w-full h-full rounded-none">
+          <CardHeader className="text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-none">
             <div className="flex justify-center mb-4">
               <Car className="h-16 w-16" />
             </div>

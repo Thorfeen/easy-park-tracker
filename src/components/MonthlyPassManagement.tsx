@@ -399,8 +399,8 @@ const MonthlyPassManagement = ({ onBack }: MonthlyPassManagementProps) => {
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen w-full h-full bg-gradient-to-br from-purple-50 to-pink-100">
+      <div className="w-full h-full">
         <Button
           variant="ghost"
           onClick={currentView === 'overview' ? onBack : () => setCurrentView('overview')}
@@ -410,8 +410,8 @@ const MonthlyPassManagement = ({ onBack }: MonthlyPassManagementProps) => {
           {currentView === 'overview' ? 'Back to Dashboard' : 'Back to Overview'}
         </Button>
 
-        <Card className="bg-white shadow-xl mb-6">
-          <CardHeader className="text-center bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
+        <Card className="bg-white shadow-xl mb-6 w-full h-full rounded-none">
+          <CardHeader className="text-center bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-none">
             <div className="flex justify-center mb-4">
               <CreditCard className="h-16 w-16" />
             </div>
