@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,23 +17,39 @@ interface MonthlyPassManagementProps {
   onBack: () => void;
 }
 
+type PassType = "cycle" | "two-wheeler" | "three-wheeler" | "four-wheeler";
+type VehicleType = "cycle" | "two-wheeler" | "three-wheeler" | "four-wheeler";
 type ViewState = 'overview' | 'active' | 'expired' | 'all' | 'create';
 
 const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagementProps) => {
   const [currentView, setCurrentView] = useState<ViewState>('overview');
   const [searchTerm, setSearchTerm] = useState("");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    vehicleNumber: string;
+    passType: PassType;
+    vehicleType: VehicleType;
+    ownerName: string;
+    ownerPhone: string;
+    duration: string;
+  }>({
     vehicleNumber: '',
-    passType: 'basic' as 'basic' | 'standard' | 'premium',
-    vehicleType: 'two-wheeler' as 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+    passType: 'two-wheeler', // default
+    vehicleType: 'two-wheeler', // default
     ownerName: '',
     ownerPhone: '',
-    duration: '1' // months
+    duration: '1'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const passTypes = [
+  const passTypes: {
+    value: PassType;
+    label: string;
+    aliases: string[];
+    price: number;
+    description: string;
+    vehicleType: VehicleType;
+  }[] = [
     { value: 'cycle', label: 'Cycle Pass', aliases: ['Cycle'], price: 300, description: 'For bicycles/Cycles only', vehicleType: 'cycle' },
     { value: 'two-wheeler', label: 'Two-Wheeler Pass', aliases: ['Motercycle', 'Bike'], price: 600, description: 'For Motorcycles, Scooters', vehicleType: 'two-wheeler' },
     { value: 'three-wheeler', label: 'Three-Wheeler Pass', aliases: ['Auto Rickshaw'], price: 1200, description: 'For Auto Rickshaws only', vehicleType: 'three-wheeler' },
@@ -44,7 +61,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
 
   const getFilteredPasses = () => {
     let filteredPasses = passes;
-    
+
     switch (currentView) {
       case 'active':
         filteredPasses = activePasses;
@@ -60,7 +77,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
     }
 
     if (searchTerm) {
-      filteredPasses = filteredPasses.filter(pass => 
+      filteredPasses = filteredPasses.filter(pass =>
         pass.vehicleNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         pass.ownerName.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -71,7 +88,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.vehicleNumber.trim() || !formData.ownerName.trim() || !formData.ownerPhone.trim()) {
       toast({
         title: "Error",
@@ -83,8 +100,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
 
     // Check if vehicle already has an active pass
     const existingPass = passes.find(
-      pass => pass.vehicleNumber.toUpperCase() === formData.vehicleNumber.toUpperCase() && 
-      pass.status === 'active'
+      pass => pass.vehicleNumber.toUpperCase() === formData.vehicleNumber.toUpperCase() &&
+        pass.status === 'active'
     );
 
     if (existingPass) {
@@ -107,7 +124,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
       const newPass: Omit<MonthlyPass, 'id'> = {
         vehicleNumber: formData.vehicleNumber.toUpperCase(),
         passType: formData.passType,
-        vehicleType: selectedPassType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
+        vehicleType: selectedPassType?.vehicleType || formData.vehicleType,
         ownerName: formData.ownerName,
         ownerPhone: formData.ownerPhone,
         startDate,
@@ -117,7 +134,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
       };
 
       onAddPass(newPass);
-      
+
       toast({
         title: "Success!",
         description: `Monthly pass created for ${formData.vehicleNumber.toUpperCase()}`,
@@ -125,7 +142,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
 
       setFormData({
         vehicleNumber: '',
-        passType: 'basic',
+        passType: 'two-wheeler',
         vehicleType: 'two-wheeler',
         ownerName: '',
         ownerPhone: '',
@@ -170,7 +187,13 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4" />
-              <span>Valid until: {pass.endDate instanceof Date ? format(pass.endDate, "dd/MM/yyyy") : pass.endDate.toLocaleDateString()}</span>
+              <span>
+                Valid until: {pass.endDate instanceof Date
+                  ? format(pass.endDate, "dd/MM/yyyy")
+                  : typeof pass.endDate === 'string'
+                    ? pass.endDate
+                    : ""}
+              </span>
             </div>
           </div>
           <div className="text-right">
@@ -192,7 +215,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
           <Input
             id="vehicleNumber"
             value={formData.vehicleNumber}
-            onChange={(e) => setFormData({...formData, vehicleNumber: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
             placeholder="Enter vehicle number"
             className="text-lg py-3"
             disabled={isSubmitting}
@@ -206,7 +229,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
           <Input
             id="ownerName"
             value={formData.ownerName}
-            onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
             placeholder="Enter owner name"
             className="text-lg py-3"
             disabled={isSubmitting}
@@ -220,7 +243,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
           <Input
             id="ownerPhone"
             value={formData.ownerPhone}
-            onChange={(e) => setFormData({...formData, ownerPhone: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, ownerPhone: e.target.value })}
             placeholder="Enter phone number"
             className="text-lg py-3"
             disabled={isSubmitting}
@@ -231,7 +254,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
           <Label className="text-base font-semibold">Duration *</Label>
           <RadioGroup
             value={formData.duration}
-            onValueChange={(value) => setFormData({...formData, duration: value})}
+            onValueChange={(value) => setFormData({ ...formData, duration: value })}
             className="flex gap-4"
           >
             <div className="flex items-center space-x-2">
@@ -257,9 +280,9 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
           onValueChange={(value) => {
             const selectedType = passTypes.find(type => type.value === value);
             setFormData({
-              ...formData, 
-              passType: value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler',
-              vehicleType: selectedType?.vehicleType as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'
+              ...formData,
+              passType: value as PassType,
+              vehicleType: selectedType?.vehicleType ?? 'two-wheeler',
             });
           }}
           className="space-y-3"
@@ -349,8 +372,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
       <div className="max-w-4xl mx-auto">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={currentView === 'overview' ? onBack : () => setCurrentView('overview')}
           className="mb-6 hover:bg-white/50"
         >
@@ -368,12 +391,12 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
               Manage monthly parking passes for regular users
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="p-8">
             {currentView === 'overview' && (
               <div className="space-y-8">
                 {/* Create New Pass Button - Top */}
-                <Button 
+                <Button
                   onClick={() => setCurrentView('create')}
                   className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-3 text-lg font-semibold"
                 >
@@ -383,7 +406,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
 
                 {/* Interactive Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card 
+                  <Card
                     className="bg-green-50 border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
                     onClick={() => setCurrentView('active')}
                   >
@@ -393,8 +416,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
                       <p className="text-xs text-green-600 mt-1">Click to view all</p>
                     </CardContent>
                   </Card>
-                  
-                  <Card 
+
+                  <Card
                     className="bg-red-50 border-red-200 cursor-pointer hover:bg-red-100 transition-colors"
                     onClick={() => setCurrentView('expired')}
                   >
@@ -404,8 +427,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
                       <p className="text-xs text-red-600 mt-1">Click to view all</p>
                     </CardContent>
                   </Card>
-                  
-                  <Card 
+
+                  <Card
                     className="bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
                     onClick={() => setCurrentView('all')}
                   >
@@ -422,8 +445,8 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold">Recent Active Passes</h3>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => setCurrentView('active')}
                       >

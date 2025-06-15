@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,6 @@ import ParkingRecords from "@/components/ParkingRecords";
 import MonthlyPassManagement from "@/components/MonthlyPassManagement";
 import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard } from "lucide-react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
-import RevenueCard from "@/components/RevenueCard";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
 
 const Index = () => {
@@ -23,22 +23,27 @@ const Index = () => {
   const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
   const activeFourWheelers = activeVehicles.filter(record => record.vehicleType === 'four-wheeler');
   const completedRecords = parkingRecords.filter(record => record.status === 'completed');
-  const totalRevenue = completedRecords.reduce((sum, record) => sum + (record.amountDue || 0), 0);
+  // Calculate total parking revenue (from completed records, excluding pass holders)
+  const parkingRevenue = completedRecords.filter(r => !r.isPassHolder).reduce((sum, record) => sum + (record.amountDue || 0), 0);
+  // Calculate total monthly pass revenue (sum of all pass sales)
+  const monthlyPassRevenue = monthlyPasses.reduce((sum, pass) => sum + (pass.amount || 0), 0);
+  const totalRevenue = parkingRevenue + monthlyPassRevenue;
+
   const activePasses = monthlyPasses.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const passHolderVehicles = activeVehicles.filter(record => record.isPassHolder);
 
   const findActivePass = (vehicleNumber: string): MonthlyPass | null => {
     return monthlyPasses.find(
-      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() && 
-      pass.status === 'active' && 
-      pass.endDate > new Date()
+      pass => pass.vehicleNumber === vehicleNumber.toUpperCase() &&
+        pass.status === 'active' &&
+        pass.endDate > new Date()
     ) || null;
   };
 
   const addVehicleEntry = (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => {
     const upperVehicleNumber = vehicleNumber.toUpperCase();
     const activePass = findActivePass(upperVehicleNumber);
-    
+
     const newRecord: ParkingRecord = {
       id: Date.now().toString(),
       vehicleNumber: upperVehicleNumber,
@@ -65,12 +70,12 @@ const Index = () => {
     const exitTime = new Date();
     const durationMs = exitTime.getTime() - activeRecord.entryTime.getTime();
     const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
-    
+
     let amountDue = 0;
-    
+
     // Check if vehicle has active pass
     const activePass = findActivePass(upperVehicleNumber);
-    
+
     if (activePass && activePass.endDate > new Date()) {
       // Pass holder - no charges
       amountDue = 0;
@@ -394,3 +399,5 @@ const Index = () => {
 };
 
 export default Index;
+
+// ------------- WARNING: This file is getting long. Please consider asking for a refactor into smaller components!
