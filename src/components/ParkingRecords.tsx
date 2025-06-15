@@ -61,6 +61,18 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     });
   };
 
+  // --- NEW: helper function for amount column ---
+  const getAmountDisplay = (record: ParkingRecord) => {
+    if (record.isPassHolder) {
+      return (
+        <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+          Pass
+        </Badge>
+      );
+    }
+    return record.amountDue ? `₹${record.amountDue}` : '-';
+  };
+
   const exportToPDF = () => {
     const doc = new jsPDF('p', 'mm', 'a4'); // Set to A4 format
     const exportRecords = getExportFilteredRecords();
@@ -167,7 +179,8 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       record.entryTime.toLocaleString(),
       record.exitTime ? record.exitTime.toLocaleString() : '-',
       record.duration ? `${record.duration} hours` : '-',
-      record.amountDue ? `₹${record.amountDue}` : '-',
+      // Amount column: show "Pass" if isPassHolder
+      record.isPassHolder ? "Pass" : (record.amountDue ? `₹${record.amountDue}` : '-'),
       record.status
     ]);
     
@@ -219,7 +232,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       'Entry Time': record.entryTime.toLocaleString(),
       'Exit Time': record.exitTime ? record.exitTime.toLocaleString() : '-',
       'Duration (Hours)': record.duration || '-',
-      'Amount (₹)': record.amountDue || '-',
+      'Amount (₹)': record.isPassHolder ? "Pass" : (record.amountDue || '-'),
       'Status': record.status
     }));
     
@@ -466,9 +479,8 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
                           {record.exitTime ? record.exitTime.toLocaleString() : '-'}
                         </TableCell>
                         <TableCell>{formatDuration(record.duration)}</TableCell>
-                        <TableCell>
-                          {record.amountDue ? `₹${record.amountDue}` : '-'}
-                        </TableCell>
+                        {/* Update the Amount column here */}
+                        <TableCell>{getAmountDisplay(record)}</TableCell>
                         <TableCell>{getStatusBadge(record.status)}</TableCell>
                       </TableRow>
                     ))}
