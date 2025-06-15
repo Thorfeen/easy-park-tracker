@@ -63,7 +63,14 @@ const Index = () => {
     fetchRecords,
     setRecords,
   } = useParkingRecords();
-  const [monthlyPasses, setMonthlyPasses] = useState<MonthlyPass[]>([]);
+  const {
+    passes: monthlyPasses,
+    loading: passesLoading,
+    addPass,
+    updatePass,
+    fetchPasses,
+    setPasses: setMonthlyPasses,
+  } = useMonthlyPasses();
   const isMobile = useMobileDetection();
 
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
@@ -336,7 +343,7 @@ const Index = () => {
       case 'records':
         return <ParkingRecords records={parkingRecords} passes={monthlyPasses} onBack={() => setCurrentView('dashboard')} />;
       case 'passes':
-        return <MonthlyPassManagement passes={monthlyPasses} onAddPass={addMonthlyPass} onBack={() => setCurrentView('dashboard')} />;
+        return <MonthlyPassManagement onBack={() => setCurrentView('dashboard')} />;
       default:
         // Show the fullscreen toggle only on dashboard view
         return (

@@ -35,7 +35,38 @@ function toAppPass(raw: RawPass): MonthlyPass {
   };
 }
 
-function fromAppPass(record: Partial<MonthlyPass>): Partial<RawPass> {
+function fromAppPass(record: Omit<MonthlyPass, "id"> | Partial<MonthlyPass>): RawPass | Partial<RawPass> {
+  // If all properties needed for insert, return non-partial
+  // Else for update, partial is okay
+  // Used for insert when creating: Omit<MonthlyPass, "id">
+  // Used for update when updating: Partial<MonthlyPass>
+  if (
+    "vehicleNumber" in record &&
+    "passType" in record &&
+    "vehicleType" in record &&
+    "ownerName" in record &&
+    "ownerPhone" in record &&
+    "startDate" in record &&
+    "endDate" in record &&
+    "amount" in record &&
+    "status" in record
+  ) {
+    const _r = record as Omit<MonthlyPass, "id">;
+    return {
+      vehicle_number: _r.vehicleNumber,
+      pass_type: _r.passType,
+      vehicle_type: _r.vehicleType,
+      owner_name: _r.ownerName,
+      owner_phone: _r.ownerPhone,
+      start_date: _r.startDate.toISOString(),
+      end_date: _r.endDate.toISOString(),
+      amount: _r.amount,
+      status: _r.status,
+      last_used_at: _r.lastUsedAt ? _r.lastUsedAt.toISOString() : null,
+      // id, created_at handled by db
+    };
+  }
+  // Partial (update)
   return {
     vehicle_number: record.vehicleNumber,
     pass_type: record.passType,
@@ -74,23 +105,9 @@ export function useMonthlyPasses() {
     fetchPasses();
   }, [fetchPasses]);
 
+  // This fixes the .insert type: always pass all required fields (insert expects RawPass, not Partial)
   const addPass = async (record: Omit<MonthlyPass, "id">) => {
-    const toInsert = {
-      ...fromAppPass(record)
-    };
-    if (
-      !toInsert.vehicle_number ||
-      !toInsert.pass_type ||
-      !toInsert.vehicle_type ||
-      !toInsert.owner_name ||
-      !toInsert.owner_phone ||
-      !toInsert.start_date ||
-      !toInsert.end_date ||
-      !toInsert.amount ||
-      !toInsert.status
-    ) {
-      throw new Error("Missing required fields for monthly pass insert");
-    }
+    const toInsert = fromAppPass(record) as RawPass;
     const { data, error } = await supabase
       .from("monthly_passes")
       .insert([toInsert])

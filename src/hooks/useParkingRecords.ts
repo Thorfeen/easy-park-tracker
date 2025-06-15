@@ -15,7 +15,7 @@ type RawRecord = {
   status: string;
   is_pass_holder: boolean | null;
   pass_id: string | null;
-  calculation_breakdown: string[] | null;
+  calculation_breakdown: any | null; // should be Json compatible
   helmet: boolean | null;
   created_at: string | null;
 };
@@ -32,9 +32,10 @@ function toAppRecord(raw: RawRecord): ParkingRecord {
     status: raw.status as ParkingRecord["status"],
     isPassHolder: !!raw.is_pass_holder,
     passId: raw.pass_id || undefined,
-    calculationBreakdown: Array.isArray(raw.calculation_breakdown)
-      ? raw.calculation_breakdown
-      : (raw.calculation_breakdown ? [String(raw.calculation_breakdown)] : undefined),
+    calculationBreakdown:
+      Array.isArray(raw.calculation_breakdown)
+        ? raw.calculation_breakdown
+        : (raw.calculation_breakdown ? [String(raw.calculation_breakdown)] : undefined),
     helmet: !!raw.helmet,
   };
 }
@@ -51,7 +52,7 @@ function fromAppRecord(record: Partial<ParkingRecord>): Partial<RawRecord> {
     status: record.status,
     is_pass_holder: record.isPassHolder,
     pass_id: record.passId,
-    calculation_breakdown: record.calculationBreakdown,
+    calculation_breakdown: record.calculationBreakdown ? record.calculationBreakdown : undefined,
     helmet: record.helmet,
     // created_at handled by db default
   };
@@ -88,6 +89,7 @@ export function useParkingRecords() {
     const toInsert = {
       ...fromAppRecord({ ...record, status: "active" })
     };
+
     // required fields check
     if (
       !toInsert.vehicle_number ||
@@ -97,11 +99,14 @@ export function useParkingRecords() {
     ) {
       throw new Error("Missing required fields for parking record insert");
     }
+    // calculation_breakdown is optional (should be JSON array if present)
+    if (toInsert.calculation_breakdown && !Array.isArray(toInsert.calculation_breakdown)) {
+      toInsert.calculation_breakdown = [String(toInsert.calculation_breakdown)];
+    }
+
     const { data, error } = await supabase
       .from("parking_records")
-      .insert([
-        toInsert
-      ])
+      .insert([toInsert])
       .select()
       .single();
 
