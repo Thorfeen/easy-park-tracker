@@ -18,6 +18,7 @@ const Index = () => {
   const isMobile = useMobileDetection();
 
   const activeVehicles = parkingRecords.filter(record => record.status === 'active');
+  const activeCycles = activeVehicles.filter(record => record.vehicleType === 'cycle');
   const activeTwoWheelers = activeVehicles.filter(record => record.vehicleType === 'two-wheeler');
   const activeThreeWheelers = activeVehicles.filter(record => record.vehicleType === 'three-wheeler');
   const activeFourWheelers = activeVehicles.filter(record => record.vehicleType === 'four-wheeler');
@@ -174,6 +175,13 @@ const Index = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="flex items-center gap-1">
                           <Bike className="h-3 w-3" />
+                          Cycles
+                        </span>
+                        <span className="font-medium">{activeCycles.length}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1">
+                          <Bike className="h-3 w-3" />
                           Two Wheelers
                         </span>
                         <span className="font-medium">{activeTwoWheelers.length}</span>
@@ -326,6 +334,34 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
+                      {/* CYCLES SECTION */}
+                      {activeCycles.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                            <Bike className="h-4 w-4" />
+                            Cycles ({activeCycles.length})
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {activeCycles.slice(0, 3).map(record => (
+                              <div key={record.id} className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                                <div>
+                                  <p className="font-semibold text-sm">{record.vehicleNumber}</p>
+                                  <p className="text-xs text-gray-600">
+                                    {format(record.entryTime, "hh:mm a")}
+                                  </p>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <Badge variant="secondary" className="text-xs">Active</Badge>
+                                  {record.isPassHolder && (
+                                    <Badge variant="default" className="text-xs bg-purple-600">Pass</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* EXISTING 2W/3W/4W sections */}
                       {activeTwoWheelers.length > 0 && (
                         <div>
                           <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
