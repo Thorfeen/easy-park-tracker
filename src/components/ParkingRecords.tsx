@@ -153,7 +153,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
     doc.setFontSize(10);
     doc.text('Total Revenue', 12 + (cardWidth + spacing) * 3, yPosition + 6);
     doc.setFontSize(16); // Consistent size
-    doc.text(`₹${totalRevenue}`, 12 + (cardWidth + spacing) * 3, yPosition + 15);
+    doc.text(`Rs. ${totalRevenue}`, 12 + (cardWidth + spacing) * 3, yPosition + 15);
     
     yPosition += 35;
     
@@ -169,7 +169,7 @@ const ParkingRecords = ({ records, onBack }: ParkingRecordsProps) => {
       record.duration ? `${record.duration} hours` : '-',
       (record.status === 'completed' && record.isPassHolder)
         ? "Pass"
-        : (record.amountDue ? `₹${record.amountDue}` : '-'),
+        : (record.amountDue ? `Rs. ${record.amountDue}` : '-'),
       record.status
     ]);
     
