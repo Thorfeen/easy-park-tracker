@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,9 +12,10 @@ interface VehicleExitProps {
   onProcessExit: (vehicleNumber: string) => ParkingRecord | null;
   onBack: () => void;
   findActivePass: (vehicleNumber: string) => any | null;
+  onUpdatePassLastUsedAt: (passId: string) => void;
 }
 
-const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps) => {
+const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUsedAt }: VehicleExitProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [exitRecord, setExitRecord] = useState<ParkingRecord | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -44,6 +44,12 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass }: VehicleExitProps
       
       if (record) {
         setExitRecord(record);
+
+        // If the exited vehicle was a pass holder, update pass lastUsedAt
+        if (record.isPassHolder && record.passId) {
+          onUpdatePassLastUsedAt(record.passId);
+        }
+
         toast({
           title: "Success!",
           description: `Vehicle ${vehicleNumber.toUpperCase()} has been processed for exit`,

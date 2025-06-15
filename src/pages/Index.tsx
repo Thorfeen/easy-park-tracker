@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +30,17 @@ const Index = () => {
 
   const activePasses = monthlyPasses.filter(pass => pass.status === 'active' && pass.endDate > new Date());
   const passHolderVehicles = activeVehicles.filter(record => record.isPassHolder);
+
+  // New: Update lastUsedAt for a monthly pass
+  const updatePassLastUsedAt = (passId: string) => {
+    setMonthlyPasses(prev =>
+      prev.map(pass =>
+        pass.id === passId
+          ? { ...pass, lastUsedAt: new Date() }
+          : pass
+      )
+    );
+  };
 
   const findActivePass = (vehicleNumber: string): MonthlyPass | null => {
     return monthlyPasses.find(
@@ -121,9 +131,23 @@ const Index = () => {
   const renderCurrentView = () => {
     switch (currentView) {
       case 'entry':
-        return <VehicleEntry onAddEntry={addVehicleEntry} onBack={() => setCurrentView('dashboard')} findActivePass={findActivePass} />;
+        return (
+          <VehicleEntry
+            onAddEntry={addVehicleEntry}
+            onBack={() => setCurrentView('dashboard')}
+            findActivePass={findActivePass}
+            onUpdatePassLastUsedAt={updatePassLastUsedAt}
+          />
+        );
       case 'exit':
-        return <VehicleExit onProcessExit={processVehicleExit} onBack={() => setCurrentView('dashboard')} findActivePass={findActivePass} />;
+        return (
+          <VehicleExit
+            onProcessExit={processVehicleExit}
+            onBack={() => setCurrentView('dashboard')}
+            findActivePass={findActivePass}
+            onUpdatePassLastUsedAt={updatePassLastUsedAt}
+          />
+        );
       case 'records':
         return <ParkingRecords records={parkingRecords} passes={monthlyPasses} onBack={() => setCurrentView('dashboard')} />;
       case 'passes':

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,9 +11,10 @@ interface VehicleEntryProps {
   onAddEntry: (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
   onBack: () => void;
   findActivePass: (vehicleNumber: string) => any | null;
+  onUpdatePassLastUsedAt: (passId: string) => void;
 }
 
-const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps) => {
+const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsedAt }: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleType, setVehicleType] = useState<'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,12 +46,19 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass }: VehicleEntryProps)
     
     try {
       onAddEntry(vehicleNumber, vehicleType);
+
+      // If a pass was detected and used, update its lastUsedAt
+      if (detectedPass && detectedPass.id) {
+        onUpdatePassLastUsedAt(detectedPass.id);
+      }
+
       toast({
         title: "Success!",
         description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
       });
       setVehicleNumber("");
       setVehicleType('two-wheeler');
+      setDetectedPass(null); // Clear detected pass after successful entry
     } catch (error) {
       toast({
         title: "Error",
