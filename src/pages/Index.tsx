@@ -10,7 +10,6 @@ import { Car, Clock, History, DollarSign, ScanLine, Truck, Bike, CreditCard } fr
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import RevenueCard from "@/components/RevenueCard";
 import { ParkingRecord, MonthlyPass } from "@/types/parking";
-import { useUser } from "@supabase/auth-helpers-react"; // you may use supabase.auth.getUser() directly if useUser is not available
 import { useParkingRecords } from "@/hooks/useParkingRecords";
 import { useMonthlyPasses } from "@/hooks/useMonthlyPasses";
 

@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ParkingRecord } from "@/types/parking";
 
+// For timestamps (entry/exit) use ISO
+const toISO = (d?: Date) => d ? d.toISOString() : undefined;
+
 export function useParkingRecords(userId: string | undefined) {
   const queryClient = useQueryClient();
 
@@ -38,19 +41,18 @@ export function useParkingRecords(userId: string | undefined) {
 
   const createParkingRecord = useMutation({
     mutationFn: async (newRecord: Omit<ParkingRecord, "id" | "exitTime" | "duration" | "amountDue">) => {
+      const insertObj = {
+        vehicle_number: newRecord.vehicleNumber,
+        vehicle_type: newRecord.vehicleType,
+        entry_time: toISO(newRecord.entryTime) ?? "",
+        status: "active",
+        is_pass_holder: newRecord.isPassHolder,
+        pass_id: newRecord.passId,
+        user_id: userId!,
+      };
       const { data, error } = await supabase
         .from("parking_records")
-        .insert([
-          {
-            vehicle_number: newRecord.vehicleNumber,
-            vehicle_type: newRecord.vehicleType,
-            entry_time: newRecord.entryTime,
-            status: "active",
-            is_pass_holder: newRecord.isPassHolder,
-            pass_id: newRecord.passId,
-            user_id: userId,
-          },
-        ])
+        .insert([insertObj])
         .select("*")
         .single();
 
@@ -83,15 +85,24 @@ export function useParkingRecords(userId: string | undefined) {
       recordId: string;
       fields: Partial<ParkingRecord>;
     }) => {
+      // Prepare update object with fields mapped to snake_case and convert Dates to ISO string
+      const updateObj: { [key: string]: any } = {};
+      if ("exitTime" in fields && fields.exitTime)
+        updateObj.exit_time = toISO(fields.exitTime);
+      if ("duration" in fields && typeof fields.duration === "number")
+        updateObj.duration = fields.duration;
+      if ("amountDue" in fields)
+        updateObj.amount_due = fields.amountDue;
+      if ("status" in fields)
+        updateObj.status = fields.status;
+      if ("isPassHolder" in fields)
+        updateObj.is_pass_holder = fields.isPassHolder;
+      if ("passId" in fields)
+        updateObj.pass_id = fields.passId;
+
       const { data, error } = await supabase
         .from("parking_records")
-        .update({
-          ...("exitTime" in fields ? { exit_time: fields.exitTime } : {}),
-          ...("duration" in fields ? { duration: fields.duration } : {}),
-          ...("amountDue" in fields ? { amount_due: fields.amountDue } : {}),
-          ...("status" in fields ? { status: fields.status } : {}),
-          ...("isPassHolder" in fields ? { is_pass_holder: fields.isPassHolder } : {}),
-        })
+        .update(updateObj)
         .eq("id", recordId)
         .select("*")
         .single();
@@ -113,3 +124,4 @@ export function useParkingRecords(userId: string | undefined) {
     refetch: parkingRecordsQuery.refetch,
   };
 }
+

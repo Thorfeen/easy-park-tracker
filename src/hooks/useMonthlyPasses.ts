@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MonthlyPass } from "@/types/parking";
 
+// Date to YYYY-MM-DD string for SQL
+const toDateString = (d?: Date) => (d ? d.toISOString().split("T")[0] : undefined);
+
 export function useMonthlyPasses(userId: string | undefined) {
   const queryClient = useQueryClient();
 
@@ -37,22 +40,21 @@ export function useMonthlyPasses(userId: string | undefined) {
 
   const createMonthlyPass = useMutation({
     mutationFn: async (newPass: Omit<MonthlyPass, "id">) => {
+      const insertObj = {
+        vehicle_number: newPass.vehicleNumber,
+        pass_type: newPass.passType,
+        vehicle_type: newPass.vehicleType,
+        owner_name: newPass.ownerName,
+        owner_phone: newPass.ownerPhone,
+        start_date: toDateString(newPass.startDate) ?? "",
+        end_date: toDateString(newPass.endDate) ?? "",
+        amount: newPass.amount,
+        status: newPass.status || "active",
+        user_id: userId!,
+      };
       const { data, error } = await supabase
         .from("monthly_passes")
-        .insert([
-          {
-            vehicle_number: newPass.vehicleNumber,
-            pass_type: newPass.passType,
-            vehicle_type: newPass.vehicleType,
-            owner_name: newPass.ownerName,
-            owner_phone: newPass.ownerPhone,
-            start_date: newPass.startDate,
-            end_date: newPass.endDate,
-            amount: newPass.amount,
-            status: newPass.status || "active",
-            user_id: userId,
-          },
-        ])
+        .insert([insertObj])
         .select("*")
         .single();
       if (error) throw new Error(error.message);
