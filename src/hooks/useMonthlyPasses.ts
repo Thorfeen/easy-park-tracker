@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,15 +12,21 @@ export function useMonthlyPasses(userId: string | undefined) {
   const monthlyPassesQuery = useQuery({
     queryKey: ["monthly_passes", userId],
     queryFn: async () => {
-      if (!userId) return [];
+      if (!userId) {
+        console.log("No userId provided, returning empty passes.");
+        return [];
+      }
       const { data, error } = await supabase
         .from("monthly_passes")
         .select("*")
         .order("start_date", { ascending: false });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Error fetching monthly passes:", error);
+        throw new Error(error.message);
+      }
 
-      return data?.map((pass) => ({
+      const passes = data?.map((pass) => ({
         ...pass,
         startDate: pass.start_date ? new Date(pass.start_date) : undefined,
         endDate: pass.end_date ? new Date(pass.end_date) : undefined,
@@ -34,12 +39,18 @@ export function useMonthlyPasses(userId: string | undefined) {
         status: pass.status,
         id: pass.id,
       })) as MonthlyPass[];
+      console.log("Fetched passes:", passes);
+      return passes;
     },
     enabled: !!userId,
   });
 
   const createMonthlyPass = useMutation({
     mutationFn: async (newPass: Omit<MonthlyPass, "id">) => {
+      if (!userId) {
+        console.error("No userId provided, not inserting monthly pass");
+        throw new Error("No userId");
+      }
       const insertObj = {
         vehicle_number: newPass.vehicleNumber,
         pass_type: newPass.passType,
@@ -50,14 +61,19 @@ export function useMonthlyPasses(userId: string | undefined) {
         end_date: toDateString(newPass.endDate) ?? "",
         amount: newPass.amount,
         status: newPass.status || "active",
-        user_id: userId!,
+        user_id: userId,
       };
+      console.log("Inserting monthly pass:", insertObj);
       const { data, error } = await supabase
         .from("monthly_passes")
         .insert([insertObj])
         .select("*")
         .single();
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Supabase error inserting pass:", error);
+        throw new Error(error.message);
+      }
+      console.log("Inserted monthly pass (raw):", data);
 
       return {
         ...data,
@@ -73,9 +89,13 @@ export function useMonthlyPasses(userId: string | undefined) {
         id: data.id,
       } as MonthlyPass;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Successfully created monthly pass:", data);
       queryClient.invalidateQueries({ queryKey: ["monthly_passes", userId] });
     },
+    onError: (error) => {
+      console.error("Error creating monthly pass:", error);
+    }
   });
 
   return {

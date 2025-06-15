@@ -401,6 +401,14 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack, userId }: MonthlyPas
     );
   };
 
+  useEffect(() => {
+    if (passes.length === 0) {
+      console.log("No monthly passes available (props.passes is empty).");
+    } else {
+      console.log("Monthly passes in props:", passes);
+    }
+  }, [passes]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
       <div className="max-w-4xl mx-auto">
