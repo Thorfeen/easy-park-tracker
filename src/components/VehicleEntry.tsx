@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface VehicleEntryProps {
-  onAddEntry: (vehicleNumber: string, vehicleType: 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
+  onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler') => void;
   onBack: () => void;
   findActivePass: (vehicleNumber: string) => any | null;
   onUpdatePassLastUsedAt: (passId: string) => void;
@@ -16,14 +17,14 @@ interface VehicleEntryProps {
 
 const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsedAt }: VehicleEntryProps) => {
   const [vehicleNumber, setVehicleNumber] = useState("");
-  const [vehicleType, setVehicleType] = useState<'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
+  const [vehicleType, setVehicleType] = useState<'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler'>('two-wheeler');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!vehicleNumber.trim()) {
       toast({
         title: "Error",
@@ -43,7 +44,7 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
     }
 
     setIsSubmitting(true);
-    
+
     try {
       onAddEntry(vehicleNumber, vehicleType);
 
@@ -89,10 +90,16 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
 
   const vehicleTypes = [
     {
+      value: 'cycle' as const,
+      label: 'Cycle',
+      icon: Bike,
+      description: 'Bicycle only'
+    },
+    {
       value: 'two-wheeler' as const,
       label: 'Two Wheeler',
       icon: Bike,
-      description: 'Motorcycles, Scooters, Bicycles'
+      description: 'Motorcycles, Scooters'
     },
     {
       value: 'three-wheeler' as const,
@@ -178,22 +185,20 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
                 <Label className="text-base font-semibold">Vehicle Type *</Label>
                 <RadioGroup
                   value={vehicleType}
-                  onValueChange={(value) => setVehicleType(value as 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
-                  className="space-y-3"
+                  onValueChange={(value) => setVehicleType(value as 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler')}
+                  className="flex flex-row gap-4"
                 >
                   {vehicleTypes.map((type) => {
                     const Icon = type.icon;
                     return (
-                      <div key={type.value} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <div key={type.value} className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 cursor-pointer min-w-[110px]">
                         <RadioGroupItem value={type.value} id={type.value} />
-                        <div className="flex items-center space-x-3 flex-1">
-                          <Icon className="h-6 w-6 text-gray-600" />
-                          <div className="flex-1">
-                            <Label htmlFor={type.value} className="font-medium cursor-pointer">
-                              {type.label}
-                            </Label>
-                            <p className="text-sm text-gray-500">{type.description}</p>
-                          </div>
+                        <div className="flex flex-col items-center mt-2">
+                          <Icon className="h-6 w-6 text-gray-600 mb-1" />
+                          <Label htmlFor={type.value} className="font-medium cursor-pointer">
+                            {type.label}
+                          </Label>
+                          <p className="text-xs text-gray-500 text-center">{type.description}</p>
                         </div>
                       </div>
                     );
@@ -230,3 +235,5 @@ const VehicleEntry = ({ onAddEntry, onBack, findActivePass, onUpdatePassLastUsed
 };
 
 export default VehicleEntry;
+
+// WARNING: This file is getting long. Please consider asking for a refactor into smaller components!
