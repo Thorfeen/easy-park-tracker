@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -198,7 +198,25 @@ const Index = () => {
                   </CardContent>
                 </Card>
 
-                <RevenueCard records={parkingRecords} />
+                <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">{`₹${totalRevenue}`}</div>
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Parking Charges</span>
+                        <span className="font-medium">{`₹${parkingRevenue}`}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Monthly Pass Sales</span>
+                        <span className="font-medium">{`₹${monthlyPassRevenue}`}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Action Cards */}
@@ -291,7 +309,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {record.entryTime.toLocaleTimeString()}
+                                    {format(record.entryTime, "hh:mm a")}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -305,7 +323,6 @@ const Index = () => {
                           </div>
                         </div>
                       )}
-
                       {activeThreeWheelers.length > 0 && (
                         <div>
                           <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
@@ -318,7 +335,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {record.entryTime.toLocaleTimeString()}
+                                    {format(record.entryTime, "hh:mm a")}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -332,7 +349,6 @@ const Index = () => {
                           </div>
                         </div>
                       )}
-
                       {activeFourWheelers.length > 0 && (
                         <div>
                           <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
@@ -345,7 +361,7 @@ const Index = () => {
                                 <div>
                                   <p className="font-semibold text-sm">{record.vehicleNumber}</p>
                                   <p className="text-xs text-gray-600">
-                                    {record.entryTime.toLocaleTimeString()}
+                                    {format(record.entryTime, "hh:mm a")}
                                   </p>
                                 </div>
                                 <div className="flex flex-col gap-1">

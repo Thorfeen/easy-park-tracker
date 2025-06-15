@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CreditCard, User, Phone, Car, Calendar, Plus, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MonthlyPass } from "@/types/parking";
+import { format } from "date-fns";
 
 interface MonthlyPassManagementProps {
   passes: MonthlyPass[];
@@ -169,7 +170,7 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4" />
-              <span>Valid until: {pass.endDate.toLocaleDateString()}</span>
+              <span>Valid until: {pass.endDate instanceof Date ? format(pass.endDate, "dd/MM/yyyy") : pass.endDate.toLocaleDateString()}</span>
             </div>
           </div>
           <div className="text-right">
@@ -452,3 +453,5 @@ const MonthlyPassManagement = ({ passes, onAddPass, onBack }: MonthlyPassManagem
 };
 
 export default MonthlyPassManagement;
+
+// ------------- WARNING: This file is getting long. Please consider refactoring it for easier maintenance!
