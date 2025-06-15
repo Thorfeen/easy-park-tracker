@@ -163,7 +163,15 @@ const Index = () => {
       case 'records':
         return <ParkingRecords records={parkingRecords} passes={monthlyPasses} onBack={() => setCurrentView('dashboard')} />;
       case 'passes':
-        return <MonthlyPassManagement passes={monthlyPasses} onAddPass={addMonthlyPass} onBack={() => setCurrentView('dashboard')} />;
+        // Add userId prop as required
+        return (
+          <MonthlyPassManagement
+            passes={monthlyPasses}
+            onAddPass={addMonthlyPass}
+            onBack={() => setCurrentView('dashboard')}
+            userId={userId}
+          />
+        );
       default:
         return (
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
