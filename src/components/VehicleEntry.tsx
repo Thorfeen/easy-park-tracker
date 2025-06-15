@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard } from "lucide-react";
+import { ArrowLeft, Car, Clock, Bike, Truck, CreditCard, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDurationFull } from "@/utils/parkingCharges";
 import VehicleTypeSelector from "./vehicle-entry/VehicleTypeSelector";
 import HelmetSelector from "./vehicle-entry/HelmetSelector";
 import PassDetectionBanner from "./vehicle-entry/PassDetectionBanner";
 import ParkingRatesGrid from "./vehicle-entry/ParkingRatesGrid";
+import { format } from "date-fns";
 
 interface VehicleEntryProps {
   onAddEntry: (vehicleNumber: string, vehicleType: 'cycle' | 'two-wheeler' | 'three-wheeler' | 'four-wheeler', helmet: boolean, toastCallback?: (args: { title: string, description: string, variant?: string }) => void) => boolean | void;
@@ -181,7 +182,10 @@ const VehicleEntry = ({
     }
   };
 
-  const currentTime = new Date().toLocaleString();
+  // Format current time and date in 12-hour format and readable date
+  const currentTime = format(new Date(), "hh:mm a");
+  const currentDate = format(new Date(), "MMMM d, yyyy");
+
   const vehicleTypes = [
     { value: 'cycle' as const, label: 'Cycle', icon: Bike, description: 'Bicycle only' },
     { value: 'two-wheeler' as const, label: 'Two Wheeler', icon: Bike, description: 'Motorcycles, Scooters' },
@@ -212,11 +216,19 @@ const VehicleEntry = ({
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8">
+            {/* Date and Time in single line */}
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 text-blue-700">
-                <Clock className="h-5 w-5" />
-                <span className="font-semibold">Current Time:</span>
-                <span>{currentTime}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-blue-700">
+                {/* Single line: Date (calendar icon+label+value), then Time (clock icon+label+value) */}
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  <span className="font-semibold">Date:</span>
+                  <span>{currentDate}</span>
+                  <span className="mx-3 hidden sm:inline-block">|</span>
+                  <Clock className="h-5 w-5" />
+                  <span className="font-semibold">Time:</span>
+                  <span>{currentTime}</span>
+                </div>
               </div>
             </div>
             {/* Monthly Pass/Mismatch banner */}
@@ -224,7 +236,8 @@ const VehicleEntry = ({
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Vehicle Type *</Label>
+                {/* Updated Vehicle Type heading */}
+                <span className="block font-semibold text-blue-700 mb-2">Vehicle Type:</span>
                 <div className="flex flex-row flex-wrap gap-6 items-stretch">
                   {/* Vehicle types */}
                   <VehicleTypeSelector value={vehicleType} onChange={handleVehicleTypeChange} />
