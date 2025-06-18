@@ -23,14 +23,8 @@ export const ESC_POS = {
   DOUBLE_HEIGHT: '\x1d\x21\x01',
 };
 
-export interface PrinterPort {
-  readable: ReadableStream;
-  writable: WritableStream;
-  close(): Promise<void>;
-}
-
 export class ThermalPrinter {
-  private port: PrinterPort | null = null;
+  private port: SerialPort | null = null;
   private writer: WritableStreamDefaultWriter | null = null;
 
   async connect(): Promise<boolean> {
