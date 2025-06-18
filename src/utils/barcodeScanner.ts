@@ -1,4 +1,32 @@
 
+// WebHID API type definitions
+interface HIDDevice {
+  vendorId: number;
+  productId: number;
+  productName: string;
+  opened: boolean;
+  open(): Promise<void>;
+  close(): Promise<void>;
+  addEventListener(type: string, listener: (event: any) => void): void;
+  removeEventListener(type: string, listener: (event: any) => void): void;
+}
+
+interface HIDInputReportEvent {
+  data: DataView;
+  device: HIDDevice;
+  reportId: number;
+}
+
+interface HID {
+  requestDevice(options: { filters: Array<{ vendorId?: number; productId?: number }> }): Promise<HIDDevice[]>;
+}
+
+declare global {
+  interface Navigator {
+    hid: HID;
+  }
+}
+
 // TVS 103G Barcode Scanner Integration
 export interface BarcodeData {
   value: string;
@@ -16,7 +44,7 @@ export class BarcodeScanner {
       }
 
       // Request HID device with TVS 103G scanner vendor/product IDs
-      const devices = await (navigator as any).hid.requestDevice({
+      const devices = await navigator.hid.requestDevice({
         filters: [
           { vendorId: 0x0DD4 }, // TVS vendor ID
           { vendorId: 0x05FE }, // Alternative vendor ID for barcode scanners
@@ -62,7 +90,7 @@ export class BarcodeScanner {
     this.onScanCallback = callback;
   }
 
-  private handleInputReport(event: any): void {
+  private handleInputReport(event: HIDInputReportEvent): void {
     const { data, device, reportId } = event;
     
     try {
