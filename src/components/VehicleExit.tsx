@@ -1,11 +1,13 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, Car, IndianRupee, CreditCard } from "lucide-react";
+import { ArrowLeft, Clock, Car, IndianRupee, CreditCard, Scan, ScanLine } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { ParkingRecord } from "@/types/parking";
 import { formatDurationFull } from "@/utils/parkingCharges";
 
@@ -23,6 +25,42 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
   const [vehicleNotFound, setVehicleNotFound] = useState(false);
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const { toast } = useToast();
+  
+  // Barcode scanner integration
+  const {
+    isConnected: scannerConnected,
+    isConnecting: scannerConnecting,
+    error: scannerError,
+    lastScan,
+    connect: connectScanner,
+    disconnect: disconnectScanner,
+    clearLastScan,
+  } = useBarcodeScanner();
+
+  // Handle barcode scan
+  useEffect(() => {
+    if (lastScan && lastScan.value) {
+      setVehicleNumber(lastScan.value);
+      checkForPass(lastScan.value);
+      clearLastScan();
+      
+      toast({
+        title: "Barcode Scanned",
+        description: `Vehicle number: ${lastScan.value}`,
+      });
+    }
+  }, [lastScan, clearLastScan, toast]);
+
+  // Show scanner errors
+  useEffect(() => {
+    if (scannerError) {
+      toast({
+        title: "Scanner Error",
+        description: scannerError,
+        variant: "destructive",
+      });
+    }
+  }, [scannerError, toast]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +68,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
     if (!vehicleNumber.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a vehicle number",
+        description: "Please enter a vehicle number or scan a barcode",
         variant: "destructive",
       });
       return;
@@ -96,6 +134,14 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
     setVehicleNotFound(false);
   };
 
+  const handleScannerToggle = async () => {
+    if (scannerConnected) {
+      await disconnectScanner();
+    } else {
+      await connectScanner();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
       <div className="max-w-4xl mx-auto">
@@ -107,6 +153,7 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
+        
         <Card className="bg-white shadow-xl">
           <CardHeader className="text-center bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-lg">
             <div className="flex justify-center mb-4">
@@ -119,6 +166,51 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
           </CardHeader>
           
           <CardContent className="p-8">
+            {/* Barcode Scanner Status */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <ScanLine className="h-5 w-5 text-blue-600" />
+                    <span className="font-medium">TVS 103G Barcode Scanner</span>
+                  </div>
+                  <Badge 
+                    variant={scannerConnected ? "default" : "secondary"}
+                    className={scannerConnected ? "bg-green-600" : "bg-gray-500"}
+                  >
+                    {scannerConnected ? "Connected" : "Disconnected"}
+                  </Badge>
+                </div>
+                
+                <Button
+                  onClick={handleScannerToggle}
+                  disabled={scannerConnecting}
+                  variant={scannerConnected ? "destructive" : "default"}
+                  size="sm"
+                >
+                  <Scan className="h-4 w-4 mr-2" />
+                  {scannerConnecting 
+                    ? "Connecting..." 
+                    : scannerConnected 
+                      ? "Disconnect" 
+                      : "Connect"
+                  }
+                </Button>
+              </div>
+              
+              {scannerConnected && (
+                <p className="text-sm text-green-600 mt-2">
+                  ✓ Ready to scan barcodes. Point the scanner at a barcode to automatically fill the vehicle number.
+                </p>
+              )}
+              
+              {!scannerConnected && (
+                <p className="text-sm text-gray-600 mt-2">
+                  Connect the barcode scanner to automatically capture vehicle numbers from receipts.
+                </p>
+              )}
+            </div>
+
             {!exitRecord && !vehicleNotFound && (
               <div className="space-y-6">
                 {detectedPass && (
@@ -141,15 +233,27 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
                     <Label htmlFor="vehicleNumber" className="text-base font-semibold">
                       Vehicle Number *
                     </Label>
-                    <Input
-                      id="vehicleNumber"
-                      type="text"
-                      value={vehicleNumber}
-                      onChange={handleVehicleNumberChange}
-                      placeholder="Enter vehicle number to process exit"
-                      className="text-lg py-3 px-4"
-                      disabled={isProcessing}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="vehicleNumber"
+                        type="text"
+                        value={vehicleNumber}
+                        onChange={handleVehicleNumberChange}
+                        placeholder={scannerConnected ? "Scan barcode or enter vehicle number" : "Enter vehicle number to process exit"}
+                        className="text-lg py-3 px-4 pr-12"
+                        disabled={isProcessing}
+                      />
+                      {scannerConnected && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <ScanLine className="h-5 w-5 text-blue-500" />
+                        </div>
+                      )}
+                    </div>
+                    {scannerConnected && (
+                      <p className="text-sm text-blue-600">
+                        Scanner ready - point at barcode to auto-fill
+                      </p>
+                    )}
                   </div>
 
                   <Button
@@ -271,5 +375,3 @@ const VehicleExit = ({ onProcessExit, onBack, findActivePass, onUpdatePassLastUs
 };
 
 export default VehicleExit;
-
-// -------------- WARNING: This file is getting long. Please consider asking for a refactor into smaller components!
