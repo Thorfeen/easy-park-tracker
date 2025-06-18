@@ -23,6 +23,20 @@ export const ESC_POS = {
   DOUBLE_HEIGHT: '\x1d\x21\x01',
 };
 
+// Web Serial API type definitions
+interface SerialPort {
+  readable: ReadableStream;
+  writable: WritableStream;
+  open(options: {
+    baudRate: number;
+    dataBits?: number;
+    stopBits?: number;
+    parity?: 'none' | 'even' | 'odd';
+    flowControl?: 'none' | 'hardware';
+  }): Promise<void>;
+  close(): Promise<void>;
+}
+
 export class ThermalPrinter {
   private port: SerialPort | null = null;
   private writer: WritableStreamDefaultWriter | null = null;
