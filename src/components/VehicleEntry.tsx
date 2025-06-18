@@ -1,15 +1,18 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Car, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, Car, Clock, Calendar, Printer, PrinterCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDurationFull } from "@/utils/parkingCharges";
 import { Checkbox } from "@/components/ui/checkbox";
 import PassDetectionBanner from "./vehicle-entry/PassDetectionBanner";
 import ParkingRatesGrid from "./vehicle-entry/ParkingRatesGrid";
 import { format } from "date-fns";
+import { useThermalPrinter } from "@/hooks/useThermalPrinter";
+import { formatReceipt, calculate6HourCharge, ReceiptData } from "@/utils/receiptFormatter";
 
 interface VehicleEntryProps {
   // Make onAddEntry async and returns Promise<boolean>
@@ -85,6 +88,16 @@ const VehicleEntry = ({
   const [helmet, setHelmet] = useState(false);
   const { toast } = useToast();
 
+  // Thermal printer integration
+  const { 
+    isConnected: printerConnected, 
+    isConnecting: printerConnecting, 
+    error: printerError, 
+    connect: connectPrinter, 
+    disconnect: disconnectPrinter, 
+    printReceipt 
+  } = useThermalPrinter();
+
   // Helper to safely call toast callback
   const safeToastCallback = ({
     title,
@@ -110,6 +123,26 @@ const VehicleEntry = ({
     setDetectedPass(null);
     setPassTypeMismatch(false);
     setHelmet(false);
+  };
+
+  const handlePrinterToggle = async () => {
+    if (printerConnected) {
+      await disconnectPrinter();
+      toast({
+        title: "Printer Disconnected",
+        description: "Thermal printer has been disconnected",
+        variant: "default",
+      });
+    } else {
+      await connectPrinter();
+      if (printerConnected) {
+        toast({
+          title: "Printer Connected",
+          description: "TVS RP3230 thermal printer connected successfully",
+          variant: "default",
+        });
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,11 +180,53 @@ const VehicleEntry = ({
       onUpdatePassLastUsedAt(detectedPass.id);
     }
 
-    toast({
-      title: "Success!",
-      description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
-      variant: "default",
-    });
+    // Print receipt if printer is connected
+    if (printerConnected) {
+      try {
+        const currentDateTime = new Date();
+        const amount = calculate6HourCharge(vehicleType, helmet);
+        
+        const receiptData: ReceiptData = {
+          vehicleNumber,
+          vehicleType,
+          entryDate: currentDateTime,
+          entryTime: currentDateTime,
+          amount,
+          helmet,
+        };
+
+        const formattedReceipt = formatReceipt(receiptData);
+        const printSuccess = await printReceipt(formattedReceipt);
+
+        if (printSuccess) {
+          toast({
+            title: "Success!",
+            description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered and receipt printed successfully`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Entry Successful",
+            description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered, but receipt printing failed`,
+            variant: "default",
+          });
+        }
+      } catch (error) {
+        console.error('Receipt printing error:', error);
+        toast({
+          title: "Entry Successful",
+          description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered, but receipt printing failed`,
+          variant: "default",
+        });
+      }
+    } else {
+      toast({
+        title: "Success!",
+        description: `${vehicleType.replace('-', ' ')} ${vehicleNumber.toUpperCase()} has been registered successfully`,
+        variant: "default",
+      });
+    }
+
     resetState();
     setIsSubmitting(false);
   };
@@ -220,20 +295,52 @@ const VehicleEntry = ({
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8">
-            {/* Date and Time in single line */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-blue-700">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  <span className="font-semibold">Date:</span>
-                  <span>{currentDate}</span>
-                  <span className="mx-3 hidden sm:inline-block">|</span>
-                  <Clock className="h-5 w-5" />
-                  <span className="font-semibold">Time:</span>
-                  <span>{currentTime}</span>
+            {/* Date and Time + Printer Status in single row */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+              {/* Date and Time */}
+              <div className="flex-1 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-blue-700">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    <span className="font-semibold">Date:</span>
+                    <span>{currentDate}</span>
+                    <span className="mx-3 hidden sm:inline-block">|</span>
+                    <Clock className="h-5 w-5" />
+                    <span className="font-semibold">Time:</span>
+                    <span>{currentTime}</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Printer Status */}
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    {printerConnected ? (
+                      <PrinterCheck className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <Printer className="h-5 w-5 text-gray-500" />
+                    )}
+                    <span className="font-semibold text-gray-700">
+                      Printer: {printerConnected ? 'Connected' : 'Disconnected'}
+                    </span>
+                  </div>
+                  <Button
+                    variant={printerConnected ? "destructive" : "default"}
+                    size="sm"
+                    onClick={handlePrinterToggle}
+                    disabled={printerConnecting}
+                    className="ml-2"
+                  >
+                    {printerConnecting ? 'Connecting...' : (printerConnected ? 'Disconnect' : 'Connect')}
+                  </Button>
+                </div>
+                {printerError && (
+                  <p className="text-xs text-red-600 mt-1">{printerError}</p>
+                )}
+              </div>
             </div>
+
             {/* Monthly Pass/Mismatch banner */}
             <PassDetectionBanner detectedPass={detectedPass} passTypeMismatch={passTypeMismatch} />
 
@@ -310,5 +417,3 @@ const VehicleEntry = ({
 };
 
 export default VehicleEntry;
-
-// WARNING: This file is getting long. Please consider asking for a refactor into smaller components!
