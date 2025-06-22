@@ -6,9 +6,10 @@ export const useThermalPrinter = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [printerIP, setPrinterIP] = useState<string>('');
   const printerRef = useRef<ThermalPrinter | null>(null);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (ip?: string) => {
     setIsConnecting(true);
     setError(null);
     
@@ -17,11 +18,17 @@ export const useThermalPrinter = () => {
         printerRef.current = new ThermalPrinter();
       }
       
-      const success = await printerRef.current.connect();
+      const success = await printerRef.current.connect(ip);
       setIsConnected(success);
       
+      if (success && ip) {
+        setPrinterIP(ip);
+        // Store IP in localStorage for future use
+        localStorage.setItem('printerIP', ip);
+      }
+      
       if (!success) {
-        setError('Failed to connect to printer');
+        setError('Failed to connect to printer. Make sure the printer is online and WebSocket proxy is running.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -31,6 +38,10 @@ export const useThermalPrinter = () => {
     }
   }, []);
 
+  const connectWithIP = useCallback(async (ip: string) => {
+    await connect(ip);
+  }, [connect]);
+
   const disconnect = useCallback(async () => {
     setError(null);
     
@@ -38,6 +49,7 @@ export const useThermalPrinter = () => {
       if (printerRef.current) {
         await printerRef.current.disconnect();
         setIsConnected(false);
+        setPrinterIP('');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to disconnect');
@@ -66,12 +78,25 @@ export const useThermalPrinter = () => {
     }
   }, [isConnected]);
 
+  // Load saved printer IP on mount
+  const loadSavedIP = useCallback(() => {
+    const savedIP = localStorage.getItem('printerIP');
+    if (savedIP) {
+      setPrinterIP(savedIP);
+      return savedIP;
+    }
+    return '';
+  }, []);
+
   return {
     isConnected,
     isConnecting,
     error,
+    printerIP,
     connect,
+    connectWithIP,
     disconnect,
     printReceipt,
+    loadSavedIP,
   };
 };
