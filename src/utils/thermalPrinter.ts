@@ -23,90 +23,102 @@ export const ESC_POS = {
   DOUBLE_HEIGHT: '\x1d\x21\x01',
 };
 
-export class ThermalPrinter {
-  private socket: WebSocket | null = null;
-  private printerIP: string = '';
+// WebUSB API type definitions for TVS RP3230
+interface USBDevice {
+  vendorId: number;
+  productId: number;
+  productName: string;
+  opened: boolean;
+  open(): Promise<void>;
+  close(): Promise<void>;
+  selectConfiguration(configurationValue: number): Promise<void>;
+  claimInterface(interfaceNumber: number): Promise<void>;
+  releaseInterface(interfaceNumber: number): Promise<void>;
+  transferOut(endpointNumber: number, data: BufferSource): Promise<USBOutTransferResult>;
+}
 
-  async connect(printerIP?: string): Promise<boolean> {
+interface USBOutTransferResult {
+  bytesWritten: number;
+  status: 'ok' | 'stall' | 'babble';
+}
+
+interface USB {
+  requestDevice(options: { filters: Array<{ vendorId?: number; productId?: number }> }): Promise<USBDevice>;
+}
+
+declare global {
+  interface Navigator {
+    usb: USB;
+  }
+}
+
+export class ThermalPrinter {
+  private device: USBDevice | null = null;
+  private interfaceNumber = 0;
+  private endpointNumber = 1; // Typical OUT endpoint for printers
+
+  async connect(): Promise<boolean> {
     try {
-      // Use provided IP or prompt user for IP address
-      if (printerIP) {
-        this.printerIP = printerIP;
-      } else {
-        const ip = prompt('Enter printer IP address (e.g., 192.168.1.100):');
-        if (!ip) {
-          throw new Error('Printer IP address is required');
-        }
-        this.printerIP = ip;
+      if (!('usb' in navigator)) {
+        throw new Error('WebUSB API not supported');
       }
 
-      // Create WebSocket connection to proxy server or direct TCP connection
-      // Note: Direct TCP connections from browser aren't possible due to security restrictions
-      // This implementation assumes you have a WebSocket-to-TCP proxy server
-      const wsUrl = `ws://${window.location.hostname}:8080/printer/${this.printerIP}/9100`;
-      
-      return new Promise((resolve, reject) => {
-        try {
-          this.socket = new WebSocket(wsUrl);
-          
-          this.socket.onopen = () => {
-            console.log('Connected to printer via WebSocket proxy');
-            // Initialize printer
-            this.sendCommand(ESC_POS.INIT);
-            resolve(true);
-          };
-          
-          this.socket.onerror = (error) => {
-            console.error('WebSocket connection error:', error);
-            reject(new Error('Failed to connect to printer'));
-          };
-          
-          this.socket.onclose = () => {
-            console.log('WebSocket connection closed');
-            this.socket = null;
-          };
-          
-          // Set timeout for connection
-          setTimeout(() => {
-            if (this.socket?.readyState !== WebSocket.OPEN) {
-              this.socket?.close();
-              reject(new Error('Connection timeout'));
-            }
-          }, 5000);
-        } catch (error) {
-          reject(error);
-        }
+      // Request USB device with TVS RP3230 vendor/product IDs
+      this.device = await navigator.usb.requestDevice({
+        filters: [
+          { vendorId: 0x0DD4 }, // TVS vendor ID
+          { vendorId: 0x04b8 }, // Alternative vendor ID for thermal printers
+          { vendorId: 0x154f }, // Another common vendor ID
+        ]
       });
+
+      await this.device.open();
+      
+      // Select configuration (usually configuration 1)
+      await this.device.selectConfiguration(1);
+      
+      // Claim interface (usually interface 0 for printers)
+      await this.device.claimInterface(this.interfaceNumber);
+      
+      // Initialize printer
+      await this.sendCommand(ESC_POS.INIT);
+      
+      return true;
     } catch (error) {
-      console.error('Failed to connect to printer:', error);
+      console.error('Failed to connect to USB printer:', error);
       return false;
     }
   }
 
   async disconnect(): Promise<void> {
     try {
-      if (this.socket) {
-        this.socket.close();
-        this.socket = null;
+      if (this.device) {
+        await this.device.releaseInterface(this.interfaceNumber);
+        await this.device.close();
+        this.device = null;
       }
     } catch (error) {
-      console.error('Error disconnecting printer:', error);
+      console.error('Error disconnecting USB printer:', error);
     }
   }
 
   isConnected(): boolean {
-    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+    return this.device !== null && this.device.opened;
   }
 
   private async sendCommand(command: string): Promise<void> {
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+    if (!this.device) {
       throw new Error('Printer not connected');
     }
     
-    // Send ESC/POS command as binary data
     const encoder = new TextEncoder();
     const data = encoder.encode(command);
-    this.socket.send(data);
+    
+    const result = await this.device.transferOut(this.endpointNumber, data);
+    
+    if (result.status !== 'ok') {
+      throw new Error(`USB transfer failed with status: ${result.status}`);
+    }
   }
 
   async printReceipt(receiptData: string): Promise<boolean> {
@@ -121,57 +133,6 @@ export class ThermalPrinter {
       return true;
     } catch (error) {
       console.error('Failed to print receipt:', error);
-      return false;
-    }
-  }
-
-  // Alternative method for direct TCP connection (requires backend proxy)
-  async connectDirectTCP(printerIP: string): Promise<boolean> {
-    try {
-      // This would require a backend service to handle TCP connections
-      const response = await fetch('/api/printer/connect', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ip: printerIP,
-          port: 9100
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to connect to printer via backend');
-      }
-
-      const result = await response.json();
-      return result.success;
-    } catch (error) {
-      console.error('Direct TCP connection failed:', error);
-      return false;
-    }
-  }
-
-  async printDirectTCP(receiptData: string): Promise<boolean> {
-    try {
-      const response = await fetch('/api/printer/print', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: receiptData + ESC_POS.LF + ESC_POS.LF + ESC_POS.CUT
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to print via backend');
-      }
-
-      const result = await response.json();
-      return result.success;
-    } catch (error) {
-      console.error('Direct TCP print failed:', error);
       return false;
     }
   }
