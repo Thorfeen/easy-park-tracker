@@ -23,102 +23,83 @@ export const ESC_POS = {
   DOUBLE_HEIGHT: '\x1d\x21\x01',
 };
 
-// WebUSB API type definitions for TVS RP3230
-interface USBDevice {
-  vendorId: number;
-  productId: number;
-  productName: string;
-  opened: boolean;
-  open(): Promise<void>;
+// Web Serial API type definitions
+interface SerialPort {
+  readable: ReadableStream;
+  writable: WritableStream;
+  open(options: {
+    baudRate: number;
+    dataBits?: number;
+    stopBits?: number;
+    parity?: 'none' | 'even' | 'odd';
+    flowControl?: 'none' | 'hardware';
+  }): Promise<void>;
   close(): Promise<void>;
-  selectConfiguration(configurationValue: number): Promise<void>;
-  claimInterface(interfaceNumber: number): Promise<void>;
-  releaseInterface(interfaceNumber: number): Promise<void>;
-  transferOut(endpointNumber: number, data: BufferSource): Promise<USBOutTransferResult>;
-}
-
-interface USBOutTransferResult {
-  bytesWritten: number;
-  status: 'ok' | 'stall' | 'babble';
-}
-
-interface USB {
-  requestDevice(options: { filters: Array<{ vendorId?: number; productId?: number }> }): Promise<USBDevice>;
-}
-
-declare global {
-  interface Navigator {
-    usb: USB;
-  }
 }
 
 export class ThermalPrinter {
-  private device: USBDevice | null = null;
-  private interfaceNumber = 0;
-  private endpointNumber = 1; // Typical OUT endpoint for printers
+  private port: SerialPort | null = null;
+  private writer: WritableStreamDefaultWriter | null = null;
 
   async connect(): Promise<boolean> {
     try {
-      if (!('usb' in navigator)) {
-        throw new Error('WebUSB API not supported');
+      if (!('serial' in navigator)) {
+        throw new Error('Web Serial API not supported');
       }
 
-      // Request USB device with TVS RP3230 vendor/product IDs
-      this.device = await navigator.usb.requestDevice({
+      // Request port with TVS RP3230 vendor/product IDs
+      this.port = await (navigator as any).serial.requestPort({
         filters: [
-          { vendorId: 0x0DD4 }, // TVS vendor ID
-          { vendorId: 0x04b8 }, // Alternative vendor ID for thermal printers
-          { vendorId: 0x154f }, // Another common vendor ID
+          { usbVendorId: 0x0DD4 }, // TVS vendor ID
         ]
       });
 
-      await this.device.open();
-      
-      // Select configuration (usually configuration 1)
-      await this.device.selectConfiguration(1);
-      
-      // Claim interface (usually interface 0 for printers)
-      await this.device.claimInterface(this.interfaceNumber);
+      await this.port.open({ 
+        baudRate: 9600,
+        dataBits: 8,
+        stopBits: 1,
+        parity: 'none',
+        flowControl: 'none'
+      });
+
+      this.writer = this.port.writable.getWriter();
       
       // Initialize printer
       await this.sendCommand(ESC_POS.INIT);
       
       return true;
     } catch (error) {
-      console.error('Failed to connect to USB printer:', error);
+      console.error('Failed to connect to printer:', error);
       return false;
     }
   }
 
   async disconnect(): Promise<void> {
     try {
-      if (this.device) {
-        await this.device.releaseInterface(this.interfaceNumber);
-        await this.device.close();
-        this.device = null;
+      if (this.writer) {
+        await this.writer.close();
+        this.writer = null;
+      }
+      if (this.port) {
+        await this.port.close();
+        this.port = null;
       }
     } catch (error) {
-      console.error('Error disconnecting USB printer:', error);
+      console.error('Error disconnecting printer:', error);
     }
   }
 
   isConnected(): boolean {
-    return this.device !== null && this.device.opened;
+    return this.port !== null && this.writer !== null;
   }
 
   private async sendCommand(command: string): Promise<void> {
-    if (!this.device) {
+    if (!this.writer) {
       throw new Error('Printer not connected');
     }
     
     const encoder = new TextEncoder();
-    const data = encoder.encode(command);
-    
-    const result = await this.device.transferOut(this.endpointNumber, data);
-    
-    if (result.status !== 'ok') {
-      throw new Error(`USB transfer failed with status: ${result.status}`);
-    }
+    await this.writer.write(encoder.encode(command));
   }
 
   async printReceipt(receiptData: string): Promise<boolean> {
