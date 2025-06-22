@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,8 +86,6 @@ const VehicleEntry = ({
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const [passTypeMismatch, setPassTypeMismatch] = useState(false);
   const [helmet, setHelmet] = useState(false);
-  const [showPrinterIPInput, setShowPrinterIPInput] = useState(false);
-  const [printerIPInput, setPrinterIPInput] = useState('');
   const { toast } = useToast();
 
   // Thermal printer integration
@@ -94,20 +93,10 @@ const VehicleEntry = ({
     isConnected: printerConnected, 
     isConnecting: printerConnecting, 
     error: printerError, 
-    printerIP,
-    connectWithIP, 
+    connect: connectPrinter, 
     disconnect: disconnectPrinter, 
-    printReceipt,
-    loadSavedIP
+    printReceipt 
   } = useThermalPrinter();
-
-  // Load saved printer IP on component mount
-  useState(() => {
-    const savedIP = loadSavedIP();
-    if (savedIP) {
-      setPrinterIPInput(savedIP);
-    }
-  });
 
   // Helper to safely call toast callback
   const safeToastCallback = ({
@@ -141,43 +130,18 @@ const VehicleEntry = ({
       await disconnectPrinter();
       toast({
         title: "Printer Disconnected",
-        description: "Network thermal printer has been disconnected",
+        description: "Thermal printer has been disconnected",
         variant: "default",
       });
     } else {
-      if (!printerIPInput.trim()) {
-        setShowPrinterIPInput(true);
-        return;
-      }
-      await connectWithIP(printerIPInput);
+      await connectPrinter();
       if (printerConnected) {
         toast({
           title: "Printer Connected",
-          description: `Connected to TVS RP3230 at ${printerIPInput}:9100`,
+          description: "TVS RP3230 thermal printer connected successfully",
           variant: "default",
         });
-        setShowPrinterIPInput(false);
       }
-    }
-  };
-
-  const handlePrinterIPConnect = async () => {
-    if (!printerIPInput.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid IP address",
-        variant: "destructive",
-      });
-      return;
-    }
-    await connectWithIP(printerIPInput);
-    if (printerConnected) {
-      toast({
-        title: "Printer Connected",
-        description: `Connected to TVS RP3230 at ${printerIPInput}:9100`,
-        variant: "default",
-      });
-      setShowPrinterIPInput(false);
     }
   };
 
@@ -358,7 +322,7 @@ const VehicleEntry = ({
                       <Printer className="h-5 w-5 text-gray-500" />
                     )}
                     <span className="font-semibold text-gray-700">
-                      Printer: {printerConnected ? `Connected (${printerIP})` : 'Disconnected'}
+                      Printer: {printerConnected ? 'Connected' : 'Disconnected'}
                     </span>
                   </div>
                   <Button
@@ -373,29 +337,6 @@ const VehicleEntry = ({
                 </div>
                 {printerError && (
                   <p className="text-xs text-red-600 mt-1">{printerError}</p>
-                )}
-                
-                {/* Printer IP Input */}
-                {showPrinterIPInput && (
-                  <div className="mt-3 flex gap-2">
-                    <Input
-                      placeholder="192.168.1.100"
-                      value={printerIPInput}
-                      onChange={(e) => setPrinterIPInput(e.target.value)}
-                      className="text-sm"
-                      onKeyPress={(e) => e.key === 'Enter' && handlePrinterIPConnect()}
-                    />
-                    <Button size="sm" onClick={handlePrinterIPConnect}>
-                      Connect
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => setShowPrinterIPInput(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
                 )}
               </div>
             </div>
