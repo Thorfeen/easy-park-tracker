@@ -6,7 +6,18 @@ export const useThermalPrinter = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState(() => {
+    return localStorage.getItem('printerServerUrl') || 'http://localhost:3001';
+  });
   const printerRef = useRef<ThermalPrinter | null>(null);
+
+  const updateServerUrl = useCallback((url: string) => {
+    setServerUrl(url);
+    localStorage.setItem('printerServerUrl', url);
+    if (printerRef.current) {
+      printerRef.current.setServerUrl(url);
+    }
+  }, []);
 
   const connect = useCallback(async () => {
     setIsConnecting(true);
@@ -14,14 +25,16 @@ export const useThermalPrinter = () => {
     
     try {
       if (!printerRef.current) {
-        printerRef.current = new ThermalPrinter();
+        printerRef.current = new ThermalPrinter(serverUrl);
+      } else {
+        printerRef.current.setServerUrl(serverUrl);
       }
       
       const success = await printerRef.current.connect();
       setIsConnected(success);
       
       if (!success) {
-        setError('Failed to connect to printer');
+        setError('Failed to connect to printer server. Make sure the Node.js server is running.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -29,7 +42,7 @@ export const useThermalPrinter = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, []);
+  }, [serverUrl]);
 
   const disconnect = useCallback(async () => {
     setError(null);
@@ -49,14 +62,14 @@ export const useThermalPrinter = () => {
     
     try {
       if (!printerRef.current || !isConnected) {
-        setError('Printer not connected');
+        setError('Printer server not connected');
         return false;
       }
       
       const success = await printerRef.current.printReceipt(receiptData);
       
       if (!success) {
-        setError('Failed to print receipt');
+        setError('Failed to print receipt via server');
       }
       
       return success;
@@ -70,6 +83,8 @@ export const useThermalPrinter = () => {
     isConnected,
     isConnecting,
     error,
+    serverUrl,
+    updateServerUrl,
     connect,
     disconnect,
     printReceipt,
