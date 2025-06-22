@@ -1,5 +1,5 @@
 
-// HTTP API communication for Node.js server handling USB001 printer
+// ESC/POS Commands for TVS RP3230 Thermal Printer
 export const ESC_POS = {
   // Text formatting
   BOLD_ON: '\x1b\x45\x01',
@@ -23,89 +23,117 @@ export const ESC_POS = {
   DOUBLE_HEIGHT: '\x1d\x21\x01',
 };
 
-export class ThermalPrinter {
-  private serverUrl: string;
-  private isConnectedFlag: boolean = false;
+// WebUSB API type definitions for TVS RP3230
+interface USBDevice {
+  vendorId: number;
+  productId: number;
+  productName: string;
+  opened: boolean;
+  open(): Promise<void>;
+  close(): Promise<void>;
+  selectConfiguration(configurationValue: number): Promise<void>;
+  claimInterface(interfaceNumber: number): Promise<void>;
+  releaseInterface(interfaceNumber: number): Promise<void>;
+  transferOut(endpointNumber: number, data: BufferSource): Promise<USBOutTransferResult>;
+}
 
-  constructor(serverUrl: string = 'http://localhost:3001') {
-    this.serverUrl = serverUrl;
+interface USBOutTransferResult {
+  bytesWritten: number;
+  status: 'ok' | 'stall' | 'babble';
+}
+
+interface USB {
+  requestDevice(options: { filters: Array<{ vendorId?: number; productId?: number }> }): Promise<USBDevice>;
+}
+
+declare global {
+  interface Navigator {
+    usb: USB;
   }
+}
+
+export class ThermalPrinter {
+  private device: USBDevice | null = null;
+  private interfaceNumber = 0;
+  private endpointNumber = 1; // Typical OUT endpoint for printers
 
   async connect(): Promise<boolean> {
     try {
-      // Test connection to Node.js server
-      const response = await fetch(`${this.serverUrl}/printer/status`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      if (!('usb' in navigator)) {
+        throw new Error('WebUSB API not supported');
+      }
+
+      // Request USB device with TVS RP3230 vendor/product IDs
+      this.device = await navigator.usb.requestDevice({
+        filters: [
+          { vendorId: 0x0DD4 }, // TVS vendor ID
+          { vendorId: 0x04b8 }, // Alternative vendor ID for thermal printers
+          { vendorId: 0x154f }, // Another common vendor ID
+        ]
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        this.isConnectedFlag = data.connected || false;
-        return this.isConnectedFlag;
-      }
+      await this.device.open();
       
-      return false;
+      // Select configuration (usually configuration 1)
+      await this.device.selectConfiguration(1);
+      
+      // Claim interface (usually interface 0 for printers)
+      await this.device.claimInterface(this.interfaceNumber);
+      
+      // Initialize printer
+      await this.sendCommand(ESC_POS.INIT);
+      
+      return true;
     } catch (error) {
-      console.error('Failed to connect to printer server:', error);
+      console.error('Failed to connect to USB printer:', error);
       return false;
     }
   }
 
   async disconnect(): Promise<void> {
     try {
-      await fetch(`${this.serverUrl}/printer/disconnect`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      this.isConnectedFlag = false;
+      if (this.device) {
+        await this.device.releaseInterface(this.interfaceNumber);
+        await this.device.close();
+        this.device = null;
+      }
     } catch (error) {
-      console.error('Error disconnecting from printer server:', error);
+      console.error('Error disconnecting USB printer:', error);
     }
   }
 
   isConnected(): boolean {
-    return this.isConnectedFlag;
+    return this.device !== null && this.device.opened;
+  }
+
+  private async sendCommand(command: string): Promise<void> {
+    if (!this.device) {
+      throw new Error('Printer not connected');
+    }
+    
+    const encoder = new TextEncoder();
+    const data = encoder.encode(command);
+    
+    const result = await this.device.transferOut(this.endpointNumber, data);
+    
+    if (result.status !== 'ok') {
+      throw new Error(`USB transfer failed with status: ${result.status}`);
+    }
   }
 
   async printReceipt(receiptData: string): Promise<boolean> {
     try {
       if (!this.isConnected()) {
-        throw new Error('Printer server not connected');
+        throw new Error('Printer not connected');
       }
 
-      const response = await fetch(`${this.serverUrl}/printer/print`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: receiptData,
-          printerPort: 'USB001'
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return result.success || false;
-      }
+      await this.sendCommand(receiptData);
+      await this.sendCommand(ESC_POS.LF + ESC_POS.LF + ESC_POS.CUT);
       
-      return false;
+      return true;
     } catch (error) {
       console.error('Failed to print receipt:', error);
       return false;
     }
-  }
-
-  setServerUrl(url: string): void {
-    this.serverUrl = url;
-  }
-
-  getServerUrl(): string {
-    return this.serverUrl;
   }
 }

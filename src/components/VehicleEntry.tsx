@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Car, Clock, Calendar, Printer, PrinterCheck, Settings } from "lucide-react";
+import { ArrowLeft, Car, Clock, Calendar, Printer, PrinterCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDurationFull } from "@/utils/parkingCharges";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,7 +13,6 @@ import ParkingRatesGrid from "./vehicle-entry/ParkingRatesGrid";
 import { format } from "date-fns";
 import { useThermalPrinter } from "@/hooks/useThermalPrinter";
 import { formatReceipt, calculate6HourCharge, ReceiptData } from "@/utils/receiptFormatter";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface VehicleEntryProps {
   // Make onAddEntry async and returns Promise<boolean>
@@ -86,16 +86,13 @@ const VehicleEntry = ({
   const [detectedPass, setDetectedPass] = useState<any | null>(null);
   const [passTypeMismatch, setPassTypeMismatch] = useState(false);
   const [helmet, setHelmet] = useState(false);
-  const [tempServerUrl, setTempServerUrl] = useState('');
   const { toast } = useToast();
 
-  // Thermal printer integration with Node.js server
+  // Thermal printer integration
   const { 
     isConnected: printerConnected, 
     isConnecting: printerConnecting, 
-    error: printerError,
-    serverUrl,
-    updateServerUrl,
+    error: printerError, 
     connect: connectPrinter, 
     disconnect: disconnectPrinter, 
     printReceipt 
@@ -133,7 +130,7 @@ const VehicleEntry = ({
       await disconnectPrinter();
       toast({
         title: "Printer Disconnected",
-        description: "Node.js printer server has been disconnected",
+        description: "Thermal printer has been disconnected",
         variant: "default",
       });
     } else {
@@ -141,22 +138,10 @@ const VehicleEntry = ({
       if (printerConnected) {
         toast({
           title: "Printer Connected",
-          description: "Node.js printer server connected successfully via USB001",
+          description: "TVS RP3230 thermal printer connected successfully",
           variant: "default",
         });
       }
-    }
-  };
-
-  const handleServerUrlUpdate = () => {
-    if (tempServerUrl.trim()) {
-      updateServerUrl(tempServerUrl.trim());
-      setTempServerUrl('');
-      toast({
-        title: "Server URL Updated",
-        description: `Printer server URL set to: ${tempServerUrl.trim()}`,
-        variant: "default",
-      });
     }
   };
 
@@ -327,7 +312,7 @@ const VehicleEntry = ({
                 </div>
               </div>
 
-              {/* Printer Status with Server Config */}
+              {/* Printer Status */}
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
@@ -337,7 +322,7 @@ const VehicleEntry = ({
                       <Printer className="h-5 w-5 text-gray-500" />
                     )}
                     <span className="font-semibold text-gray-700">
-                      Server: {printerConnected ? 'Connected' : 'Disconnected'}
+                      Printer: {printerConnected ? 'Connected' : 'Disconnected'}
                     </span>
                   </div>
                   <Button
@@ -345,36 +330,10 @@ const VehicleEntry = ({
                     size="sm"
                     onClick={handlePrinterToggle}
                     disabled={printerConnecting}
+                    className="ml-2"
                   >
                     {printerConnecting ? 'Connecting...' : (printerConnected ? 'Disconnect' : 'Connect')}
                   </Button>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80">
-                      <div className="space-y-3">
-                        <h4 className="font-medium">Server Configuration</h4>
-                        <div className="space-y-2">
-                          <Label htmlFor="server-url">Server URL:</Label>
-                          <Input
-                            id="server-url"
-                            placeholder={serverUrl}
-                            value={tempServerUrl}
-                            onChange={(e) => setTempServerUrl(e.target.value)}
-                          />
-                          <Button onClick={handleServerUrlUpdate} size="sm" className="w-full">
-                            Update URL
-                          </Button>
-                        </div>
-                        <p className="text-xs text-gray-600">
-                          Current: {serverUrl}
-                        </p>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
                 </div>
                 {printerError && (
                   <p className="text-xs text-red-600 mt-1">{printerError}</p>
