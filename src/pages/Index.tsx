@@ -373,9 +373,23 @@ const Index = () => {
           <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
             <FullscreenToggleButton />
             <div className="max-w-6xl mx-auto">
+              {/* Header Section with Logo and Organization Details */}
               <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">Railway Parking Management</h1>
-                <p className="text-lg text-gray-600">Efficient Vehicle Parking Management System</p>
+                <div className="flex items-center justify-center gap-6 mb-4">
+                  <img 
+                    src="https://brandeps.com/logo-download/I/Indian-Railways-logo-vector-01.svg" 
+                    alt="Indian Railways Logo"
+                    className="h-20 w-20 object-contain"
+                  />
+                  <div className="text-left">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to South Eastern Railway</h1>
+                    <h2 className="text-2xl font-semibold text-blue-700 mb-3">Tata Nagar 2nd Entry Parking</h2>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p className="font-medium">Agency: Bookinglogic Technologies Pvt. Ltd.</p>
+                      <p className="font-medium">GSTIN: 9090932321</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Stats Cards */}
