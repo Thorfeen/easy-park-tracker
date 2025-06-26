@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -375,15 +376,15 @@ const Index = () => {
             <div className="max-w-6xl mx-auto">
               {/* Header Section with Logo and Organization Details */}
               <div className="text-center mb-8">
-                <div className="flex items-center justify-center gap-6 mb-4">
+                <div className="flex flex-col items-center mb-4">
                   <img 
                     src="https://brandeps.com/logo-download/I/Indian-Railways-logo-vector-01.svg" 
                     alt="Indian Railways Logo"
-                    className="h-20 w-20 object-contain"
+                    className="h-24 w-24 object-contain mb-4"
                   />
-                  <div className="text-left">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to South Eastern Railway</h1>
-                    <h2 className="text-2xl font-semibold text-blue-700 mb-3">Tata Nagar 2nd Entry Parking</h2>
+                  <div className="text-center">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to South Eastern Railway</h1>
+                    <h2 className="text-xl font-semibold text-blue-700 mb-3">Tata Nagar 2nd Entry Parking</h2>
                     <div className="text-sm text-gray-600 space-y-1">
                       <p className="font-medium">Agency: Bookinglogic Technologies Pvt. Ltd.</p>
                       <p className="font-medium">GSTIN: 9090932321</p>
